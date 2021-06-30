@@ -1,0 +1,21 @@
+{
+  "name": "tarhon",
+  "author": "Zalter",
+  "version": "0.1.0",
+  "description": "Web Component Element",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "rollup --config rollup.config.prod.mjs",
+    "dev": "node rollup.js"
+  },
+  "repository": {
+    "url": "https://github.com/zalter-io/tarhon"
+  },
+  "devDependencies": {
+    "@rollup/plugin-eslint": "^8.0.1",
+    "del": "^6.0.0",
+    "rollup": "^2.52.4",
+    "rollup-plugin-gzip": "^2.5.0",
+    "rollup-plugin-terser": "^7.0.2"
+  }
+}
