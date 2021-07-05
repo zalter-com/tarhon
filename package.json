@@ -3,14 +3,17 @@
   "author": "Zalter",
   "version": "0.1.0",
   "description": "Web Component Element",
-  "main": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "module": "./src/index.mjs",
   "scripts": {
+    "prepublish": "npm run build",
     "build": "rollup --config rollup.config.prod.mjs",
     "dev": "node rollup.js"
   },
   "repository": {
     "url": "https://github.com/zalter-io/tarhon"
   },
+  "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-eslint": "^8.0.1",
     "del": "^6.0.0",
