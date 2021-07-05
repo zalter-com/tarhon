@@ -76,7 +76,7 @@ export function observeComponent(TargetElement) {
     }
 
     rerenderStyle(...styles) {
-      if (hasAdoptedStyles) {
+      if (hasAdoptedStyles()) {
         this.shadowElement.adoptedStyleSheets = [...styles];
       } else {
         for (let style of styles) {

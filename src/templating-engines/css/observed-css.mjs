@@ -1,6 +1,6 @@
 import { ObservedValue } from '../../observed-value.mjs';
 
-export const hasConstructableStyle = (() => {
+export const hasConstructableStyle = () => {
   try {
     new CSSStyleSheet();
     return true;
@@ -9,13 +9,13 @@ export const hasConstructableStyle = (() => {
   }
 
   return false;
-})();
+};
 
-export const hasAdoptedStyles = (() => {
+export const hasAdoptedStyles = () => {
   return typeof document.adoptedStyleSheets === 'object';
-})();
+};
 
-export const hasReplaceSync = (() => {
+export const hasReplaceSync = () => {
   let styleElement = null;
   let returnValue = false;
 
@@ -33,7 +33,7 @@ export const hasReplaceSync = (() => {
   }
 
   return returnValue;
-})();
+};
 
 const createCSSPropertyChangeHandler = (styleSheet, ruleIdx, ruleProperty) => {
   /**
@@ -115,7 +115,7 @@ const buildStyleSheet = (styleSheet, styleMap) => {
 export const buildObservedStyle = (styleMap) => {
   let styleSheet;
 
-  if (hasConstructableStyle && hasReplaceSync) {
+  if (hasConstructableStyle() && hasReplaceSync()) {
     styleSheet = new CSSStyleSheet();
     buildStyleSheet(styleSheet, styleMap);
   }
@@ -144,7 +144,7 @@ const rebuildStyleSheet = (styleSheet, styleString) => {
 export const observedCSSTemplate = (stringParts, ...vars) => {
   let styleSheet;
 
-  if (hasConstructableStyle && hasReplaceSync) {
+  if (hasConstructableStyle() && hasReplaceSync()) {
     styleSheet = new CSSStyleSheet();
   } else {
     let styleElement = document.createElement('style');
@@ -157,7 +157,7 @@ export const observedCSSTemplate = (stringParts, ...vars) => {
   };
 
   const eventChange = () => {
-    if (hasReplaceSync) {
+    if (hasReplaceSync()) {
       styleSheet.replaceSync(createCSSString());
     } else {
       rebuildStyleSheet(styleSheet, createCSSString());

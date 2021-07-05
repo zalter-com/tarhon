@@ -1,15 +1,26 @@
 {
   "name": "tarhon",
   "author": "Zalter",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.2",
   "description": "Web Component Element",
-  "main": "./dist/index.mjs",
-  "module": "./src/index.mjs",
+  "main": "./build/tarhon.js",
+  "module": "./build/tarhon.mjs",
+  "exports": {
+    "require": "./build/tarhon.js",
+    "import": "./build/tarhon.mjs"
+  },
   "scripts": {
     "prepublish": "npm run build",
     "build": "rollup --config rollup.config.prod.mjs",
     "dev": "node rollup.js"
   },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "package.json",
+    "build",
+    "src"
+  ],
   "repository": {
     "url": "https://github.com/zalter-io/tarhon"
   },

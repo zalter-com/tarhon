@@ -5,4 +5,4 @@ package-lock.json
 # Misc
 .idea
 .DS_Store
-dist
+build
