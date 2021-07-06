@@ -1,6 +1,7 @@
 import { ObservedArray } from '../../../observed-array.mjs';
 import { ConditionalObject } from '../conditional.mjs';
 import { createNodeChangeHandler } from '../change-handlers-factories.mjs';
+import { ObservedValue } from '../../../observed-value.mjs';
 
 const SELF_BUILD = Symbol.for('__self_build__');
 const matchRegEX = /(📇[_a-zA-Z0-9]+📇)/ig;
@@ -83,6 +84,38 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
             textNodes.push(...uniqueIdentifiers[matchedItem].template);
           } else if (uniqueIdentifiers[matchedItem] instanceof DocumentFragment) {
             textNodes.push(uniqueIdentifiers[matchedItem]);
+          } else if (
+            uniqueIdentifiers[matchedItem] instanceof ObservedValue
+            && uniqueIdentifiers[matchedItem].getValue() instanceof DocumentFragment
+          ) {
+            let childFragment = uniqueIdentifiers[matchedItem].getValue();
+            textNodes.push(childFragment);
+            uniqueIdentifiers[matchedItem].addEventListener('change', (() => {
+              let matchedParent = element.parentElement;
+              let currentChildren = Array.from(childFragment.childNodes);
+              let oldFragment = childFragment;
+              return (event) => {
+                const newFragment = event.value;
+                if(oldFragment === newFragment){
+                  return;
+                }
+                const savedChildren = Array.from(newFragment.childNodes);
+                currentChildren.map(
+                  (childNode, idx) => {
+                    // remove them all from the document and re-append them to original template
+                    if(idx < currentChildren.length -1) {
+                      element.parentElement.removeChild(childNode);
+                      oldFragment.append(childNode);
+                    }
+                  }
+                );
+                const lastChild = currentChildren[length];
+                currentChildren = savedChildren;
+                matchedParent.replaceChild(newFragment, lastChild);
+                oldFragment.append(lastChild);
+                oldFragment = newFragment;
+              };
+            })());
           } else {
             const matchedTextNode = document.createTextNode(`${uniqueIdentifiers[matchedItem]}`);
 

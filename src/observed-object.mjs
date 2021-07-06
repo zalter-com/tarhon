@@ -136,6 +136,9 @@ export class ObservedObject extends observeTarget(Object) {
       case 'boolean':
         return new ObservedValue(value);
       case 'object':
+        if(value instanceof DocumentFragment){
+          return new ObservedValue(value);
+        }
         if (!(
           value instanceof ObservedValue
           || value instanceof ObservedObject
@@ -146,7 +149,6 @@ export class ObservedObject extends observeTarget(Object) {
             internalValue[Symbol.for('__ARRAY_REPLACE__')](value);
             return internalValue;
           }
-
           const internalValue = new ObservedObject();
           Object.keys(value).forEach((key) => (
             internalValue[key] = ObservedObject.convertInternalValue(value[key])
