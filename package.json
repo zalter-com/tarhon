@@ -1,7 +1,7 @@
 {
   "name": "tarhon",
   "author": "Zalter",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.3",
   "description": "Web Component Library",
   "keywords": [
     "web",
@@ -28,7 +28,6 @@
     "import": "./build/tarhon.mjs"
   },
   "scripts": {
-    "prepublish": "npm run build",
     "build": "rollup --config rollup.config.prod.mjs",
     "dev": "node rollup.js"
   },

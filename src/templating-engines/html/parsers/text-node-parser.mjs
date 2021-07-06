@@ -109,7 +109,7 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
                     }
                   }
                 );
-                const lastChild = currentChildren[length];
+                const lastChild = currentChildren[currentChildren.length-1];
                 currentChildren = savedChildren;
                 matchedParent.replaceChild(newFragment, lastChild);
                 oldFragment.append(lastChild);
