@@ -49,10 +49,14 @@ const createCSSPropertyChangeHandler = (styleSheet, ruleIdx, ruleProperty) => {
 };
 
 const addToStyleSheet = (styleSheet, selector, value) => {
-  if (selector.startsWith('@media')) {
-    styleSheet.insertRule(`${selector}{}`, styleSheet.cssRules.length);
-    buildStyleSheet(styleSheet.cssRules[styleSheet.cssRules.length - 1], value);
-    return;
+  if (selector.startsWith('@')) {
+    if (value === 1 || value === true) {
+      styleSheet.insertRule(selector);
+    } else {
+      styleSheet.insertRule(`${selector}{}`, styleSheet.cssRules.length);
+      buildStyleSheet(styleSheet.cssRules[styleSheet.cssRules.length - 1], value);
+      return;
+    }
   }
 
   if (typeof value === 'string') {
