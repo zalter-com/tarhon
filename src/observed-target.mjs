@@ -5,16 +5,37 @@ const INTERNAL_USAGES_SYMBOL = Symbol.for('__internalUsages__');
  * @property {*} eventTarget
  * @property {*} value;
  */
-class ObservedChangeEvent extends Event {
+class ObservedChangeEvent extends CustomEvent {
   /**
    *
    * @param {string} eventName
    */
-  constructor(eventName) {
-    super(eventName);
-    this.value = null;
-    this.oldValue = null;
-    this.eventTarget = null;
+  constructor(eventName, detail) {
+    super(eventName, {
+      detail: {
+        value: detail.value,
+        oldValue: detail.oldValue,
+        eventTarget: detail.eventTarget
+      }
+    });
+  }
+  set value(value){
+    this.detail.value = value
+  }
+  get value(){
+    return this.detail.value;
+  }
+  set oldValue(value){
+    this.detail.oldValue = value
+  }
+  get oldValue(){
+    return this.detail.oldValue
+  }
+  set eventTarget(value){
+    this.detail.eventTarget = value;
+  }
+  get eventTarget(){
+    return this.detail.eventTarget;
   }
 }
 
@@ -50,11 +71,9 @@ export function observeTarget(TargetClass) {
      * @returns {ObservedChangeEvent}
      */
     static createChangeEvent(value = null, oldValue = null, eventTarget = null) {
-      const event = new ObservedChangeEvent('changeValue');
-      event.value = value;
-      event.oldValue = oldValue;
-      event.eventTarget = eventTarget;
-      return event;
+      return new ObservedChangeEvent('changeValue', {
+        value, oldValue, eventTarget
+      });
     }
 
     /**

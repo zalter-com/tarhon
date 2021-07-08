@@ -38,7 +38,7 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
 
       copiedData = copiedData.substring(matchedItem.length);
 
-      if (uniqueIdentifiers[matchedItem]) {
+      if (typeof uniqueIdentifiers[matchedItem] !== 'undefined') {
         if (uniqueIdentifiers[matchedItem] instanceof Array) {
           if (uniqueIdentifiers[matchedItem]
             instanceof ObservedArray

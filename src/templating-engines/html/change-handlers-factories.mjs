@@ -7,7 +7,9 @@ const SELF_BUILD = Symbol.for('__self_build__');
  * @returns {function(*): void}
  */
 export const createAttrChangeHandler = (element, attributeName) => (event) => {
-  element.setAttribute(attributeName, event.value);
+  // this one has to be treated in a special way.
+  if(event.eventTarget) element.setAttribute(attributeName, event.eventTarget);
+  else element.setAttribute(attributeName, event.value);
 };
 
 /**

@@ -1,5 +1,6 @@
 import { ObservedObject } from './observed-object.mjs';
 import { hasAdoptedStyles } from './templating-engines/css/observed-css.mjs';
+import { ObservedValue } from './observed-value.mjs';
 
 const __INTERNAL = Symbol();
 const INTERNAL_USAGES_SYMBOL = Symbol.for('__internalUsages__');
@@ -35,14 +36,59 @@ export function observeComponent(TargetElement) {
 
       this.state[INTERNAL_USAGES_SYMBOL].parentElement = this;
       this.attrs[INTERNAL_USAGES_SYMBOL].parentElement = this;
-
       if (typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined') {
         Object
           .getPrototypeOf(this)
           .constructor
           .observedAttributes
-          .map((attributeName) => this.attrs[attributeName] = this.getAttribute(attributeName));
+          .map((attributeName) => {
+            // if(typeof thisPrototype.attributeName){}
+            this.attrs[attributeName] = new ObservedValue(this.getAttribute(attributeName));
+
+            Object.defineProperty(this, attributeName, {
+              configurable: false,
+              enumerable: true,
+              set: (value) => {
+                this.setAttribute(attributeName, value);
+              },
+              get: () => {
+                return this.attrs[attributeName];
+              }
+            })
+          });
+
       }
+    }
+
+    setAttribute(name, value){
+      if(typeof value === 'string') {
+        return super.setAttribute(name, value);
+      }
+      if (
+        typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined' &&
+        Object
+          .getPrototypeOf(this)
+          .constructor
+          .observedAttributes
+          .includes(name)
+      ) {
+        return this.attrs[name] = value;
+      }
+    }
+
+    removeAttribute(name){
+      if (
+        typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined' &&
+        Object
+          .getPrototypeOf(this)
+          .constructor
+          .observedAttributes
+          .includes(name)
+      ) {
+        this.attrs[name] = '';
+        return ;
+      }
+      return super.removeAttribute(name)
     }
 
     get [Symbol.for('renderRequested')]() {
@@ -82,6 +128,7 @@ export function observeComponent(TargetElement) {
         for (let style of styles) {
           if (typeof style === 'function') {
             const styleElement = document.createElement('style');
+            styleElement.dataset['tarhon-style'] = 1;
             this.shadowElement.append(styleElement);
             style(styleElement.sheet);
           }
@@ -99,10 +146,16 @@ export function observeComponent(TargetElement) {
     /**
      * @abstract Must be implemented.
      */
-    render() {
-      if (this.shadowElement.firstElementChild) {
-        while (this.shadowElement.firstElementChild) {
-          this.shadowElement.removeChild(this.shadowElement.firstElementChild);
+    render(shadowElement = null) {
+      const targetShadow = shadowElement || this.shadowElement;
+      if(!targetShadow) {
+        throw new Error("A shadow must be attached before rendering");
+      }
+      if (targetShadow.firstElementChild) {
+        for (let element  of targetShadow.childNodes) {
+          if( !(element.localName === "style" && element.dataset?.['tarhon-style'] === 1)) {
+            targetShadow.removeChild(targetShadow.firstElementChild);
+          }
         }
       }
 

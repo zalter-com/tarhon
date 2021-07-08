@@ -32,7 +32,7 @@ export class ObservedObject extends observeTarget(Object) {
         const returnValue = Reflect.get(target, key, receiver);
         if(typeof returnValue !== 'undefined') return returnValue;
         else{
-          target[key] = new ObservedValue();
+          target[key] = new ObservedValue(null);
           return Reflect.get(target, key, receiver);
         }
       },
@@ -55,16 +55,18 @@ export class ObservedObject extends observeTarget(Object) {
           return false;
         }
 
-        let internalValue = ObservedObject.convertInternalValue(value);
+        let internalValue ;
 
         if (target[key] instanceof ObservedValue) {
+          if(typeof internalValue === 'undefined')
+            internalValue = ObservedObject.convertInternalValue(value);
           if (internalValue instanceof ObservedValue) {
             target[key].setValue(value);
             return true;
           }
 
           if (internalUsages.parentElement) {
-            if (internalUsages.rendered) {
+            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
               internalUsages.parentElement[Symbol.for('requestRender')]();
             }
             // no return here since this means we're changing the type
@@ -75,11 +77,13 @@ export class ObservedObject extends observeTarget(Object) {
 
         if (target[key] instanceof ObservedArray) {
           if (Array.isArray(value)) {
-            target[key][Symbol.for('__ARRAY_REPLACE__')](value, false);
+            // Possibly a bug, need to investigate further?!
+            target[key][Symbol.for('__ARRAY_REPLACE__')](value, true);
+            return true;
           }
 
           if (internalUsages.parentElement) {
-            if (internalUsages.rendered) {
+            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
               internalUsages.parentElement[Symbol.for('requestRender')]();
             }
             // no return here since this means we're changing the type
@@ -96,12 +100,15 @@ export class ObservedObject extends observeTarget(Object) {
         ) {
           // no matter the situation this means you're changing the original.
           if (internalUsages.parentElement) {
-            if (internalUsages.rendered) {
+            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
               internalUsages.parentElement[Symbol.for('requestRender')]();
             }
             // no return here since this means we're changing the type
           }
         }
+
+        if(typeof internalValue === 'undefined')
+          internalValue = ObservedObject.convertInternalValue(value);
 
         if (
           internalUsages.parentElement
