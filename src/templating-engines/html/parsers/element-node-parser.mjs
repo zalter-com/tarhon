@@ -22,7 +22,8 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
               typeof uniqueIdentifiers[attribute.value] === 'object'
               && uniqueIdentifiers[attribute.value] instanceof ConditionalObject
             ) {
-              const attributeChangeHandler = createBoolAttributeChangeHandler(element, attribute.name);
+              const attributeChangeHandler = createBoolAttributeChangeHandler(element,
+                attribute.name);
               uniqueIdentifiers[attribute.value].addEventListener('change', attributeChangeHandler);
               attributeChangeHandler({ eventTarget: uniqueIdentifiers[attribute.value] });
             }
@@ -42,6 +43,10 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
             }
           }
         }
+      }
+    } else {
+      if(oldElement){
+        element.setAttribute(attribute.name, attribute.value);
       }
     }
   }
