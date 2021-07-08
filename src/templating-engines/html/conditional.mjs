@@ -250,7 +250,7 @@ export class ConditionalObject extends ObservedTarget {
         return this.yesTemplate.attachedTemplate;
       }
     } else {
-      if (this.yesTemplate[0].parentElement) {
+      if (this.yesTemplate[0].parentElement || this.yesTemplate[0].parentNode instanceof ShadowRoot) {
         return this.yesTemplate;
       }
     }
@@ -260,7 +260,7 @@ export class ConditionalObject extends ObservedTarget {
         return this.noTemplate.attachedTemplate;
       }
     } else {
-      if (this.noTemplate[0].parentElement) {
+      if (this.noTemplate[0].parentElement  || this.noTemplate[0].parentNode instanceof ShadowRoot) {
         return this.noTemplate;
       }
     }
