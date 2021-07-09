@@ -116,8 +116,8 @@ export function observeComponent(TargetElement) {
 
     connectedCallback() {
       this.rerenderStyle(...[
-        Object.getPrototypeOf(this).constructor.style,
-        this.ownStyle
+        Object.getPrototypeOf(this)?.constructor?.style?.constructed,
+        this.ownStyle?.constructed
       ].filter(i => !!i));
     }
 

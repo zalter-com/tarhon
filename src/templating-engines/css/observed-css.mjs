@@ -49,14 +49,24 @@ const createCSSPropertyChangeHandler = (styleSheet, ruleIdx, ruleProperty) => {
 };
 
 const addToStyleSheet = (styleSheet, selector, value) => {
-  if (selector.startsWith('@')) {
-    if (value === 1 || value === true) {
-      styleSheet.insertRule(selector);
-    } else {
+  if(selector.startsWith('@font-face')){
+    // TODO Add fontface support. Probably will support @font-faces as an array of loadable fonts.
+    //  for now, however, we do not support it.
+    console.error("Font face is not currently supported. Will be supported at a later point.");
+    return;
+  }
+
+  if (
+    selector.startsWith('@media') ||
+    selector.startsWith('@keyframes')
+  ) {
       styleSheet.insertRule(`${selector}{}`, styleSheet.cssRules.length);
       buildStyleSheet(styleSheet.cssRules[styleSheet.cssRules.length - 1], value);
       return;
-    }
+  }
+  if( selector.startsWith('@')){
+    console.error("Only @media and @keyframes are currently supported.");
+    return;
   }
 
   if (typeof value === 'string') {
@@ -76,8 +86,11 @@ const addToStyleSheet = (styleSheet, selector, value) => {
       }
       ruleBody += `${ruleProperty}: ${ruleValue};`;
     }
-
-    styleSheet.insertRule(`${selector}{${ruleBody}}`, styleSheet.cssRules.length);
+    if(typeof styleSheet.insertRule === 'function') {
+      styleSheet.insertRule(`${selector}{${ruleBody}}`, styleSheet.cssRules.length);
+    }else if(typeof styleSheet.appendRule === 'function'){
+      styleSheet.appendRule(`${selector}{${ruleBody}}`);
+    }
     return;
   }
 
@@ -94,7 +107,11 @@ const addToStyleSheet = (styleSheet, selector, value) => {
         return `${ruleBody}${ruleProperty}:${value[ruleProperty]};`;
       },
       '');
-    styleSheet.insertRule(`${selector}{${ruleBody}}`, styleSheet.cssRules.length);
+    if(typeof styleSheet.insertRule === 'function') {
+      styleSheet.insertRule(`${selector}{${ruleBody}}`, styleSheet.cssRules.length);
+    }else if(typeof styleSheet.appendRule === 'function'){
+      styleSheet.appendRule(`${selector}{${ruleBody}}`);
+    }
   }
 };
 
@@ -112,22 +129,36 @@ const buildStyleSheet = (styleSheet, styleMap) => {
     }
   }
 };
+const INTERNAL_STYLE_MAP_SYMBOL = Symbol();
+const INTERNAL_BUILT_STYLE_SYMBOL = Symbol();
+
+class LazyStyle{
+  constructor(styleMap) {
+    this[INTERNAL_BUILT_STYLE_SYMBOL] = null;
+    this[INTERNAL_STYLE_MAP_SYMBOL] = styleMap;
+  }
+  get constructed(){
+    if(this[INTERNAL_BUILT_STYLE_SYMBOL]){
+      return this[INTERNAL_BUILT_STYLE_SYMBOL];
+    }
+
+    if (hasConstructableStyle() && hasReplaceSync()) {
+      let styleSheet = new CSSStyleSheet();
+      buildStyleSheet(styleSheet, this[INTERNAL_STYLE_MAP_SYMBOL]);
+      this[INTERNAL_BUILT_STYLE_SYMBOL] = styleSheet;
+      return this[INTERNAL_BUILT_STYLE_SYMBOL];
+    }
+    return (sheet) => {
+      buildStyleSheet(sheet, this[INTERNAL_STYLE_MAP_SYMBOL]);
+    }
+  }
+}
+
 /**
  *
  * @param {Map<string, string | ObservedValue>} styleMap
  */
-export const buildObservedStyle = (styleMap) => {
-  let styleSheet;
-
-  if (hasConstructableStyle() && hasReplaceSync()) {
-    styleSheet = new CSSStyleSheet();
-    buildStyleSheet(styleSheet, styleMap);
-  }
-
-  return styleSheet || ((sheet) => {
-    buildStyleSheet(sheet, styleMap);
-  });
-};
+export const buildObservedStyle = (styleMap) => new LazyStyle(styleMap);
 
 const rebuildStyleSheet = (styleSheet, styleString) => {
   const styleElement = document.createElement('style');
@@ -146,6 +177,7 @@ const rebuildStyleSheet = (styleSheet, styleString) => {
 };
 
 export const observedCSSTemplate = (stringParts, ...vars) => {
+  console.warn("!!!EXPERIMENTAL!!! Use css templates at your own risk. This is not entirely supported");
   let styleSheet;
 
   if (hasConstructableStyle() && hasReplaceSync()) {
