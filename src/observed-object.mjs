@@ -104,7 +104,12 @@ export class ObservedObject extends observeTarget(Object) {
         ) {
           internalValue[INTERNAL_USAGES_SYMBOL].parentElement = internalUsages.parentElement;
         }
-
+        if(target[key] === internalValue){
+          if (internalUsages?.parentElement?.state?.[INTERNAL_USAGES_SYMBOL]?.rendered) {
+            internalUsages?.parentElement?.[Symbol.for('cancelRerender')]();
+          }
+          return true;
+        }
         target[key] = internalValue;
 
         return true;

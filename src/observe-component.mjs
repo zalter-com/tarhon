@@ -139,6 +139,12 @@ export function observeComponent(TargetElement, config = {}) {
         requestAnimationFrame(this[__INTERNAL].animationFrameHandler);
     }
 
+    [Symbol.for('cancelRerender')]() {
+      if (this[__INTERNAL].requestedAnimationFrame) {
+        cancelAnimationFrame(this[__INTERNAL].requestedAnimationFrame);
+      }
+    }
+
     /**
      * @abstract Call this with super.attributeChangedCallback in your own (if you implement it)
      * @param name
