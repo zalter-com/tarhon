@@ -45,12 +45,14 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
             && uniqueIdentifiers[matchedItem][SELF_BUILD].returnsStrings) {
             const matchedTextNode = document.createTextNode(`${uniqueIdentifiers[matchedItem]}`);
 
-            if (typeof uniqueIdentifiers[matchedItem]
-              === 'object'
-              && typeof uniqueIdentifiers[matchedItem].addEventListener
-              === 'function') {
-              uniqueIdentifiers[matchedItem].addEventListener('change',
-                createNodeChangeHandler(matchedTextNode));
+            if (
+              typeof uniqueIdentifiers[matchedItem] === 'object'
+              && typeof uniqueIdentifiers[matchedItem].addEventListener === 'function'
+            ) {
+              uniqueIdentifiers[matchedItem].addEventListener(
+                'change',
+                createNodeChangeHandler(matchedTextNode)
+              );
             }
 
             textNodes.push(matchedTextNode);
@@ -70,12 +72,14 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
             if (uniqueIdentifiers[matchedItem] instanceof ObservedArray) {
               uniqueIdentifiers[matchedItem][SELF_BUILD].container = container;
 
-              if (typeof uniqueIdentifiers[matchedItem]
-                === 'object'
-                && typeof uniqueIdentifiers[matchedItem].addEventListener
-                === 'function') {
-                uniqueIdentifiers[matchedItem].addEventListener('change',
-                  createNodeChangeHandler(container));
+              if (
+                typeof uniqueIdentifiers[matchedItem] === 'object'
+                && typeof uniqueIdentifiers[matchedItem].addEventListener === 'function'
+              ) {
+                uniqueIdentifiers[matchedItem].addEventListener(
+                  'change',
+                  createNodeChangeHandler(container)
+                );
               }
             }
           }
@@ -96,20 +100,20 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
               let oldFragment = childFragment;
               return (event) => {
                 const newFragment = event.value;
-                if(oldFragment === newFragment){
+                if (oldFragment === newFragment) {
                   return;
                 }
                 const savedChildren = Array.from(newFragment.childNodes);
                 currentChildren.map(
                   (childNode, idx) => {
                     // remove them all from the document and re-append them to original template
-                    if(idx < currentChildren.length -1) {
+                    if (idx < currentChildren.length - 1) {
                       element.parentElement.removeChild(childNode);
                       oldFragment.append(childNode);
                     }
                   }
                 );
-                const lastChild = currentChildren[currentChildren.length-1];
+                const lastChild = currentChildren[currentChildren.length - 1];
                 currentChildren = savedChildren;
                 matchedParent.replaceChild(newFragment, lastChild);
                 oldFragment.append(lastChild);
@@ -119,12 +123,14 @@ export const textNodeParser = (element, uniqueIdentifiers) => {
           } else {
             const matchedTextNode = document.createTextNode(`${uniqueIdentifiers[matchedItem]}`);
 
-            if (typeof uniqueIdentifiers[matchedItem]
-              === 'object'
-              && typeof uniqueIdentifiers[matchedItem].addEventListener
-              === 'function') {
-              uniqueIdentifiers[matchedItem].addEventListener('change',
-                createNodeChangeHandler(matchedTextNode));
+            if (
+              typeof uniqueIdentifiers[matchedItem] === 'object'
+              && typeof uniqueIdentifiers[matchedItem].addEventListener === 'function'
+            ) {
+              uniqueIdentifiers[matchedItem].addEventListener(
+                'change',
+                createNodeChangeHandler(matchedTextNode)
+              );
             }
 
             textNodes.push(matchedTextNode);

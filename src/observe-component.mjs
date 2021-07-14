@@ -5,7 +5,18 @@ import { ObservedValue } from './observed-value.mjs';
 const __INTERNAL = Symbol();
 const INTERNAL_USAGES_SYMBOL = Symbol.for('__internalUsages__');
 
-export function observeComponent(TargetElement) {
+/**
+ * @typedef ObserveComponentConfig
+ * @property {"closed"|"open"|"none"} useShadow = closed
+ */
+
+/**
+ *
+ * @param TargetElement
+ * @param config
+ * @return {{new(): T, prototype: T}}
+ */
+export function observeComponent(TargetElement, config = {}) {
   return class T extends TargetElement {
     constructor() {
       super();
@@ -27,6 +38,7 @@ export function observeComponent(TargetElement) {
         enumerable: false,
         value: {
           requestedAnimationFrame: null,
+          createdShadowElement: null,
           animationFrameHandler: () => {
             this[__INTERNAL].requestedAnimationFrame = null;
             this.render();
@@ -35,7 +47,7 @@ export function observeComponent(TargetElement) {
       });
 
       this.state[INTERNAL_USAGES_SYMBOL].parentElement = this;
-      this.attrs[INTERNAL_USAGES_SYMBOL].parentElement = this;
+
       if (typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined') {
         Object
           .getPrototypeOf(this)
@@ -54,14 +66,36 @@ export function observeComponent(TargetElement) {
               get: () => {
                 return this.attrs[attributeName];
               }
-            })
+            });
           });
 
       }
     }
 
-    setAttribute(name, value){
-      if(typeof value === 'string') {
+    /**
+     * Memoized ShadowRoot getter. Can be replaced or configured.
+     * @return {ShadowRoot|null|T}
+     */
+    get renderRoot() {
+      if (this[__INTERNAL].createdShadowElement) {
+        return this[__INTERNAL].createdShadowElement;
+      }
+      switch (config?.useShadow) {
+        case 'none':
+          return (this[__INTERNAL].createdShadowElement = this);
+        case 'open':
+          return (this[__INTERNAL].createdShadowElement = this.attachShadow({ mode: 'open' }));
+        case 'closed':
+        // fallthrough
+        default:
+        // fallthrough
+
+      }
+      return this[__INTERNAL].createdShadowElement = this.attachShadow({ mode: 'closed' });
+    }
+
+    setAttribute(name, value) {
+      if (typeof value === 'string') {
         return super.setAttribute(name, value);
       }
       if (
@@ -76,7 +110,7 @@ export function observeComponent(TargetElement) {
       }
     }
 
-    removeAttribute(name){
+    removeAttribute(name) {
       if (
         typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined' &&
         Object
@@ -86,9 +120,9 @@ export function observeComponent(TargetElement) {
           .includes(name)
       ) {
         this.attrs[name] = '';
-        return ;
+        return;
       }
-      return super.removeAttribute(name)
+      return super.removeAttribute(name);
     }
 
     get [Symbol.for('renderRequested')]() {
@@ -115,21 +149,30 @@ export function observeComponent(TargetElement) {
     }
 
     connectedCallback() {
-      this.rerenderStyle(...[
-        Object.getPrototypeOf(this)?.constructor?.style?.constructed,
-        this.ownStyle?.constructed
-      ].filter(i => !!i));
+      if (this.renderRoot instanceof ShadowRoot) {
+        console.log("Got in render style.");
+        this.renderStyle(...[
+          Object.getPrototypeOf(this)?.constructor?.style?.constructed,
+          this.ownStyle?.constructed
+        ].filter(i => !!i));
+      } else {
+        if (Object.getPrototypeOf(this)?.constructor?.style || this.ownStyle) {
+          console.error(
+            'Components without a shadowRoot can not have local defined styles. Use classes defined above, instead!'
+          );
+        }
+      }
     }
 
-    rerenderStyle(...styles) {
+    renderStyle(...styles) {
       if (hasAdoptedStyles()) {
-        this.shadowElement.adoptedStyleSheets = [...styles];
+        this.renderRoot.adoptedStyleSheets = [...styles];
       } else {
         for (let style of styles) {
           if (typeof style === 'function') {
             const styleElement = document.createElement('style');
-            styleElement.dataset['tarhon-style'] = 1;
-            this.shadowElement.append(styleElement);
+            styleElement.dataset['tarhonStyle'] = 1;
+            this.renderRoot.append(styleElement);
             style(styleElement.sheet);
           }
         }
@@ -146,19 +189,14 @@ export function observeComponent(TargetElement) {
     /**
      * @abstract Must be implemented.
      */
-    render(shadowElement = null) {
-      const targetShadow = shadowElement || this.shadowElement;
-      if(!targetShadow) {
-        throw new Error("A shadow must be attached before rendering");
-      }
-      if (targetShadow.firstElementChild) {
-        for (let element  of targetShadow.childNodes) {
-          if( !(element.localName === "style" && element.dataset?.['tarhon-style'] === 1)) {
-            targetShadow.removeChild(targetShadow.firstElementChild);
+    render() {
+      if (this.renderRoot.firstElementChild) {
+        for (let element of this.renderRoot.childNodes) {
+          if (!(element.localName === 'style' && element.dataset?.['tarhonStyle'] === 1)) {
+            this.renderRoot.removeChild(element);
           }
         }
       }
-
       this.state[INTERNAL_USAGES_SYMBOL].rendered = true;
     }
   };

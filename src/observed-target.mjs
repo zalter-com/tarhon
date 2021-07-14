@@ -19,22 +19,28 @@ class ObservedChangeEvent extends CustomEvent {
       }
     });
   }
-  set value(value){
-    this.detail.value = value
+
+  set value(value) {
+    this.detail.value = value;
   }
-  get value(){
+
+  get value() {
     return this.detail.value;
   }
-  set oldValue(value){
-    this.detail.oldValue = value
+
+  set oldValue(value) {
+    this.detail.oldValue = value;
   }
-  get oldValue(){
-    return this.detail.oldValue
+
+  get oldValue() {
+    return this.detail.oldValue;
   }
-  set eventTarget(value){
+
+  set eventTarget(value) {
     this.detail.eventTarget = value;
   }
-  get eventTarget(){
+
+  get eventTarget() {
     return this.detail.eventTarget;
   }
 }
@@ -70,7 +76,7 @@ export function observeTarget(TargetClass) {
      * @param {*} eventTarget The target object on which the change happened.
      * @returns {ObservedChangeEvent}
      */
-    static createChangeEvent(value = null, oldValue = null, eventTarget = null) {
+    static createChangeValueEvent(value = null, oldValue = null, eventTarget = null) {
       return new ObservedChangeEvent('changeValue', {
         value, oldValue, eventTarget
       });
@@ -82,17 +88,26 @@ export function observeTarget(TargetClass) {
     static initInternalUsage() {
       return {
         eventListeners: {
-          changeValue: []
+          changeValue: new Set()
         },
         parentElement: null,
         rendered: false
       };
     }
 
+    /**
+     * Static method that does the actual dispatching.
+     * @note This is made so that we avoid overloading the stack and referencing in each object.
+     * @param internalUsages
+     * @param event
+     */
     static dispatchStatic(internalUsages, event) {
       const f = () => {
-        internalUsages.eventListeners
-        && internalUsages.eventListeners[event.type].map(handler => handler(event));
+        if(internalUsages.eventListeners && internalUsages.eventListeners[event.type] instanceof Set){
+          for ( let handler of internalUsages.eventListeners[event.type]){
+            handler(event);
+          }
+        }
         internalUsages.animationFrame = null;
       };
 
@@ -104,47 +119,48 @@ export function observeTarget(TargetClass) {
 
         internalUsages.animationFrame = window.requestAnimationFrame(f);
       } else {
-        if(typeof setImmediate === "function") setImmediate(f);
-        else throw new Error("No way to run immediate events.");
+        if (typeof setImmediate === 'function') {
+          setImmediate(f);
+        } else {
+          throw new Error('No way to run immediate events.');
+        }
       }
     }
 
     /**
      * Adds an event listener / handler for the event with that name.
+     * @note Due to the fact that change is a natural event for certain elements, change event
+     *    listeners will be modified to be called "changeValue".
      * @param {string} eventName
      * @param {eventHandler} eventHandler
+     * @param {boolean} override
      */
-    addEventListener(eventName, eventHandler) {
-      const internalEventName = eventName === 'change' ? 'changeValue' : eventName;
-      eventHandler.target = this;
-
-      if (typeof this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] !== 'object') {
-        this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] = {};
+    addEventListener(eventName, eventHandler, override = false) {
+      const internalEventName = eventName === 'change' && !override ? 'changeValue' : eventName;
+      if (
+        typeof this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] !== 'object' ||
+        !(this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] instanceof Set)
+      ) {
+        this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] = new Set();
       }
 
-      if (this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName].includes(eventHandler)) {
-        return;
-      }
-
-      this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName].push(eventHandler);
+      this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName].add(eventHandler);
     }
 
     /**
      *
      * @param {string} eventName
      * @param {eventHandler} eventHandler
+     * @param {boolean} override
      */
-    removeEventListener(eventName, eventHandler) {
-      const internalEventName = eventName === 'change' ? 'changeValue' : eventName;
+    removeEventListener(eventName, eventHandler, override) {
+      const internalEventName = eventName === 'change' && !override ? 'changeValue' : eventName;
 
       if (
         this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName]
-        && Array.isArray(this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName])
+        && this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] instanceof Set
       ) {
-        this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName] =
-          this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName].filter((item) => (
-            item !== eventHandler
-          ));
+        this[INTERNAL_USAGES_SYMBOL].eventListeners[internalEventName].remove(eventHandler);
       }
     }
 

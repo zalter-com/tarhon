@@ -11,6 +11,7 @@ const INTERNAL_ARRAY = Symbol();
 
 /**
  * ObservedArray with proxy hooks.
+ * @todo allow the user to extend other types of arrays as the map function below suggests.
  * @see Due to the way this works with its internal values and the way they're replaced by certain functions, one should proceed with caution
  *  when removing elements that they converted to ObservedValue and were used in Templates. The templates make a ref count increase to the
  *  ObservedValue and keep them. For the time being I don't have a good solution to the problems caused by it, thus you should proceed with caution
@@ -75,13 +76,13 @@ export class ObservedArray extends observeTarget(Array) {
         }
 
         if (target[key] instanceof ObservedValue) {
-          const event = ObservedArray.createChangeEvent(value, target[key], receiver);
+          const event = ObservedArray.createChangeValueEvent(value, target[key], receiver);
           ObservedArray.dispatchStatic(internalUsages, event);
           return target[key].setValue(value);
         }
 
         const returnValue = target[key] = value;
-        const event = ObservedArray.createChangeEvent(value, target[key], receiver);
+        const event = ObservedArray.createChangeValueEvent(value, target[key], receiver);
         ObservedArray.dispatchStatic(internalUsages, event);
 
         return returnValue;
@@ -105,7 +106,7 @@ export class ObservedArray extends observeTarget(Array) {
     this[INTERNAL_ARRAY].splice(0, this[INTERNAL_ARRAY].length, ...arrayToReplaceWith);
 
     if (runEvent) {
-      const event = ObservedArray.createChangeEvent(null, null, this);
+      const event = ObservedArray.createChangeValueEvent(null, null, this);
       ObservedArray.dispatchStatic(this[INTERNAL_USAGES_SYMBOL], event);
     }
   }
@@ -140,7 +141,7 @@ export class ObservedArray extends observeTarget(Array) {
       );
       ObservedArray.dispatchStatic(
         newlyBuiltArray[INTERNAL_USAGES_SYMBOL],
-        ObservedArray.createChangeEvent(null, null, newlyBuiltArray)
+        ObservedArray.createChangeValueEvent(null, null, newlyBuiltArray)
       );
     });
 
@@ -177,7 +178,7 @@ export class ObservedArray extends observeTarget(Array) {
       );
       ObservedArray.dispatchStatic(
         newlyBuiltArray[INTERNAL_USAGES_SYMBOL],
-        ObservedArray.createChangeEvent(null, null, newlyBuiltArray)
+        ObservedArray.createChangeValueEvent(null, null, newlyBuiltArray)
       );
     });
 

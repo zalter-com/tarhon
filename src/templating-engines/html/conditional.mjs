@@ -238,7 +238,7 @@ export class ConditionalObject extends ObservedTarget {
       this.lazyHandlers.changeListener = () => {
         this.conditionResults = this.computeConditions(this.conditionRules, false);
         this.replaceTemplates();
-        const newEvent = ConditionalObject.createChangeEvent(`${this}`, null, this);
+        const newEvent = ConditionalObject.createChangeValueEvent(`${this}`, null, this);
         this.dispatchEvent(newEvent);
       }
     );

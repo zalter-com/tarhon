@@ -64,7 +64,7 @@ export class ObservedValue extends ObservedTarget {
       newValue = newValue.getValue();
     }
 
-    const event = ObservedValue.createChangeEvent(newValue, this[INTERNAL_VALUE_SYMBOL]);
+    const event = ObservedValue.createChangeValueEvent(newValue, this[INTERNAL_VALUE_SYMBOL]);
     this.dispatchEvent(event);
     return this[INTERNAL_VALUE_SYMBOL] = newValue;
   }
