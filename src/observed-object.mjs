@@ -64,14 +64,9 @@ export class ObservedObject extends observeTarget(Object) {
             target[key].setValue(value);
             return true;
           }
-
-          if (internalUsages.parentElement) {
-            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
-              internalUsages.parentElement[Symbol.for('requestRender')]();
-            }
-            // no return here since this means we're changing the type
-          } else {
-            return false;
+          // getting here means changing the type - Request Rerender.
+          if (internalUsages?.parentElement?.state?.[INTERNAL_USAGES_SYMBOL]?.rendered) {
+            internalUsages?.parentElement?.[Symbol.for('requestRender')]();
           }
         }
 
@@ -82,14 +77,9 @@ export class ObservedObject extends observeTarget(Object) {
             return true;
           }
 
-          if (internalUsages.parentElement) {
-            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
-              internalUsages.parentElement[Symbol.for('requestRender')]();
-            }
-            // no return here since this means we're changing the type
-          } else {
-            console.error(`Changing type on ${key} is only permitted when it can trigger a rerender.`);
-            return false;
+          // getting here means changing the type - Request Rerender.
+          if (internalUsages?.parentElement?.state?.[INTERNAL_USAGES_SYMBOL]?.rendered) {
+            internalUsages?.parentElement?.[Symbol.for('requestRender')]();
           }
         }
 
@@ -98,12 +88,9 @@ export class ObservedObject extends observeTarget(Object) {
           || target[key] === null
           || typeof target[key] === 'undefined'
         ) {
-          // no matter the situation this means you're changing the original.
-          if (internalUsages.parentElement) {
-            if (internalUsages.parentElement.state[INTERNAL_USAGES_SYMBOL].rendered) {
-              internalUsages.parentElement[Symbol.for('requestRender')]();
-            }
-            // no return here since this means we're changing the type
+          // getting here means changing the type - Request Rerender.
+          if (internalUsages?.parentElement?.state?.[INTERNAL_USAGES_SYMBOL]?.rendered) {
+            internalUsages?.parentElement?.[Symbol.for('requestRender')]();
           }
         }
 
@@ -156,11 +143,14 @@ export class ObservedObject extends observeTarget(Object) {
             internalValue[Symbol.for('__ARRAY_REPLACE__')](value);
             return internalValue;
           }
-          const internalValue = new ObservedObject();
-          Object.keys(value).forEach((key) => (
-            internalValue[key] = ObservedObject.convertInternalValue(value[key])
-          ));
-          return internalValue;
+          if(Object.getPrototypeOf(value).constructor === Object) {
+            const internalValue = new ObservedObject();
+            Object.keys(value).forEach((key) => (
+              internalValue[key] = ObservedObject.convertInternalValue(value[key])
+            ));
+            return internalValue;
+          }
+          return value;
         }
 
         return value;

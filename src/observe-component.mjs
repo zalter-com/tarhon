@@ -47,6 +47,7 @@ export function observeComponent(TargetElement, config = {}) {
       });
 
       this.state[INTERNAL_USAGES_SYMBOL].parentElement = this;
+      this.attrs[INTERNAL_USAGES_SYMBOL].parentElement = this;
 
       if (typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined') {
         Object
@@ -150,7 +151,6 @@ export function observeComponent(TargetElement, config = {}) {
 
     connectedCallback() {
       if (this.renderRoot instanceof ShadowRoot) {
-        console.log("Got in render style.");
         this.renderStyle(...[
           Object.getPrototypeOf(this)?.constructor?.style?.constructed,
           this.ownStyle?.constructed
@@ -191,7 +191,8 @@ export function observeComponent(TargetElement, config = {}) {
      */
     render() {
       if (this.renderRoot.firstElementChild) {
-        for (let element of this.renderRoot.childNodes) {
+        const savedNodes = Array.from(this.renderRoot.childNodes);
+        for (let element of savedNodes) {
           if (!(element.localName === 'style' && element.dataset?.['tarhonStyle'] === 1)) {
             this.renderRoot.removeChild(element);
           }
