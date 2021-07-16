@@ -1,4 +1,5 @@
-import { html, observeComponent } from './index.mjs';
+import { observeComponent } from './observe-component.mjs';
+import { observedTemplate } from './templating-engines/html/observed-template.mjs';
 
 export class Context extends observeComponent(HTMLElement) {
   static get tagName() {
@@ -16,7 +17,7 @@ export class Context extends observeComponent(HTMLElement) {
 
   render() {
     super.render();
-    this.renderRoot.appendChild(html`<slot></slot>`);
+    this.renderRoot.appendChild(observedTemplate`<slot></slot>`);
   }
 }
 

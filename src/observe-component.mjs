@@ -60,7 +60,7 @@ export function observeComponent(TargetElement, config = {}) {
           .observedAttributes
           .map((attributeName) => {
             // if(typeof thisPrototype.attributeName){}
-            this.attrs[attributeName] = new ObservedValue(this.getAttribute(attributeName));
+            this.attrs[attributeName] = new ObservedValue(null);
 
             Object.defineProperty(this, attributeName, {
               configurable: false,

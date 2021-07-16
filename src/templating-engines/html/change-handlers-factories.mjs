@@ -1,5 +1,3 @@
-import { ObservedValue } from '../../observed-value.mjs';
-
 const SELF_BUILD = Symbol.for('__self_build__');
 
 /**
