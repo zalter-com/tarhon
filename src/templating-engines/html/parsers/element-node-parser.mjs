@@ -19,25 +19,31 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
         } else {
           if (['readonly', 'disabled', 'checked'].includes(attribute.name)) {
             if (
-              typeof uniqueIdentifiers[attribute.value] === 'object'
-              && uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+              typeof uniqueIdentifiers[attribute.value] === 'object' &&
+              typeof uniqueIdentifiers[attribute.value].addEventListener === 'function'
             ) {
-              const attributeChangeHandler = createBoolAttributeChangeHandler(element,
-                attribute.name);
+              const attributeChangeHandler = createBoolAttributeChangeHandler(
+                element,
+                attribute.name,
+                uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+              );
               uniqueIdentifiers[attribute.value].addEventListener('change', attributeChangeHandler);
-              attributeChangeHandler({ eventTarget: uniqueIdentifiers[attribute.value] });
+              attributeChangeHandler(
+                uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+                ? { eventTarget: uniqueIdentifiers[attribute.value] }
+                : {  value: uniqueIdentifiers[attribute.value] }
+              );
             }
           } else {
             if (
-              typeof uniqueIdentifiers[attribute.value] === 'object'
-              && typeof uniqueIdentifiers[attribute.value].addEventListener === 'function'
+              typeof uniqueIdentifiers[attribute.value] === 'object' &&
+              typeof uniqueIdentifiers[attribute.value].addEventListener === 'function'
             ) {
               uniqueIdentifiers[attribute.value].addEventListener(
                 'change',
                 createAttrChangeHandler(element, attribute.name)
               );
             }
-
             if (element.getAttribute(attribute.name) !== uniqueIdentifiers[attribute.value]) {
               element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
             }
@@ -45,7 +51,7 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
         }
       }
     } else {
-      if(oldElement){
+      if (oldElement) {
         element.setAttribute(attribute.name, attribute.value);
       }
     }

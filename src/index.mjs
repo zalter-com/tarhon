@@ -9,3 +9,4 @@ export { buildObservedStyle as styled } from './templating-engines/css/observed-
 export * from './templating-engines/html/conditional.mjs';
 export { htmlConditional as conditional } from './templating-engines/html/conditional.mjs';
 export * from './observe-component.mjs';
+export * from './context.mjs'

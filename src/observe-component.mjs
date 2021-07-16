@@ -1,6 +1,7 @@
 import { ObservedObject } from './observed-object.mjs';
 import { hasAdoptedStyles } from './templating-engines/css/observed-css.mjs';
 import { ObservedValue } from './observed-value.mjs';
+// import { Context } from './context.mjs';
 
 const __INTERNAL = Symbol();
 const INTERNAL_USAGES_SYMBOL = Symbol.for('__internalUsages__');
@@ -17,6 +18,9 @@ const INTERNAL_USAGES_SYMBOL = Symbol.for('__internalUsages__');
  * @return {{new(): T, prototype: T}}
  */
 export function observeComponent(TargetElement, config = {}) {
+  if (typeof TargetElement.prototype[Symbol.for('requestRender')] === 'function') {
+    throw new Error('Can not observeComponent from another observeComponent');
+  }
   return class T extends TargetElement {
     constructor() {
       super();
@@ -109,6 +113,19 @@ export function observeComponent(TargetElement, config = {}) {
       ) {
         return this.attrs[name] = value;
       }
+    }
+
+    getAttribute(name) {
+      if (typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined' &&
+        Object
+          .getPrototypeOf(this)
+          .constructor
+          .observedAttributes
+          .includes(name)) {
+        return this.attrs[name];
+      }
+      return super.getAttribute(name);
+
     }
 
     removeAttribute(name) {
@@ -205,6 +222,39 @@ export function observeComponent(TargetElement, config = {}) {
         }
       }
       this.state[INTERNAL_USAGES_SYMBOL].rendered = true;
+    }
+
+    findContext(ctx, contextComponent) {
+      return T.findFirstParent(
+        contextComponent?.tagName || 'tarhon-context',
+        contextComponent?.contextAttribute || 'ctx',
+        ctx,
+        this
+      );
+    }
+
+    /**
+     *
+     * @param {string} tagName
+     * @param {string} attributeName
+     * @param {string} attributeValue
+     * @param {HTMLElement | ShadowRoot} startingElement
+     * @return {null|*}
+     */
+    static findFirstParent(tagName, attributeName, attributeValue, startingElement) {
+      if (startingElement === null) {
+        return null;
+      }
+      if (startingElement.localName
+        === tagName
+        && startingElement.getAttribute(attributeName)
+        === attributeValue) {
+        return startingElement;
+      }
+      if (startingElement instanceof ShadowRoot) {
+        return T.findFirstParent(tagName, attributeName, attributeValue, startingElement.host);
+      }
+      return T.findFirstParent(tagName, attributeName, attributeValue, startingElement.parentNode);
     }
   };
 }

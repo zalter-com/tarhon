@@ -1,3 +1,5 @@
+import { ObservedValue } from '../../observed-value.mjs';
+
 const SELF_BUILD = Symbol.for('__self_build__');
 
 /**
@@ -14,18 +16,28 @@ export const createAttrChangeHandler = (element, attributeName) => (event) => {
 
 /**
  *
- * @param element
- * @param attributeName
+ * @param {HTMLElement} element
+ * @param {string} attributeName
+ * @param {boolean} withConditional
  * @returns {function(*): (undefined)}
  */
-export const createBoolAttributeChangeHandler = (element, attributeName) => (event) => {
-  if (event.eventTarget.conditionResults && element.getAttribute(attributeName) !== null) {
-    element.removeAttribute(attributeName);
-    return;
-  }
+export const createBoolAttributeChangeHandler = (element, attributeName, withConditional = true) => (event) => {
+  if(withConditional) {
+    if (event.eventTarget.conditionResults && element.getAttribute(attributeName) !== null) {
+      element.removeAttribute(attributeName);
+      return;
+    }
 
-  if (!event.eventTarget.conditionResults && element.getAttribute(attributeName) === null) {
-    element.setAttribute(attributeName, '');
+    if (!event.eventTarget.conditionResults && element.getAttribute(attributeName) === null) {
+      element.setAttribute(attributeName, '');
+    }
+  }else{
+    const actualValue = typeof event?.value?.getValue === 'function' ? event.value.getValue() : event.value;
+    if(actualValue === 'true' || actualValue === attributeName || actualValue === true){
+      element.setAttribute(attributeName, actualValue);
+    } else{
+      element.removeAttribute(attributeName);
+    }
   }
 };
 
