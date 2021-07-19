@@ -227,7 +227,7 @@ export function observeComponent(TargetElement, config = {}) {
     findContext(ctx, contextComponent) {
       return T.findFirstParent(
         contextComponent?.tagName || 'tarhon-context',
-        contextComponent?.contextAttribute,
+        contextComponent?.contextAttribute !== undefined ? contextComponent?.contextAttribute : 'ctx', // allows null
         ctx,
         this
       );

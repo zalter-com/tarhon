@@ -33,6 +33,12 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
                 ? { eventTarget: uniqueIdentifiers[attribute.value] }
                 : {  value: uniqueIdentifiers[attribute.value] }
               );
+            }else{
+              if(uniqueIdentifiers[attribute.value] && uniqueIdentifiers[attribute.value] !== "false"){
+                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+              }else{
+                element.removeAttribute(attribute.name);
+              }
             }
           } else {
             if (
