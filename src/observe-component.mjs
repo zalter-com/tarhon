@@ -115,14 +115,14 @@ export function observeComponent(TargetElement, config = {}) {
       }
     }
 
-    getAttribute(name) {
+    getAttribute(name, callGetValue = true) {
       if (typeof Object.getPrototypeOf(this).constructor.observedAttributes !== 'undefined' &&
         Object
           .getPrototypeOf(this)
           .constructor
           .observedAttributes
           .includes(name)) {
-        return this.attrs[name];
+        return ( callGetValue && typeof this.attrs[name].getValue === 'function') ? this.attrs[name].getValue() : this.attrs[name];
       }
       return super.getAttribute(name);
 
@@ -227,7 +227,7 @@ export function observeComponent(TargetElement, config = {}) {
     findContext(ctx, contextComponent) {
       return T.findFirstParent(
         contextComponent?.tagName || 'tarhon-context',
-        contextComponent?.contextAttribute || 'ctx',
+        contextComponent?.contextAttribute,
         ctx,
         this
       );
@@ -245,15 +245,18 @@ export function observeComponent(TargetElement, config = {}) {
       if (startingElement === null) {
         return null;
       }
-      if (startingElement.localName
-        === tagName
-        && startingElement.getAttribute(attributeName)
-        === attributeValue) {
+
+      if (
+        startingElement.localName === tagName
+        && (!attributeName || startingElement.getAttribute(attributeName) === attributeValue)
+      ) {
         return startingElement;
       }
+
       if (startingElement instanceof ShadowRoot) {
         return T.findFirstParent(tagName, attributeName, attributeValue, startingElement.host);
       }
+
       return T.findFirstParent(tagName, attributeName, attributeValue, startingElement.parentNode);
     }
   };

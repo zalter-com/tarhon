@@ -49,6 +49,8 @@ use a browser window where you import our module file: [unpkg.com CDN](https://u
   ```
 
 ## Examples
+More examples and an actual documentation will come soon.
+
 /index.mjs
 ```javascript
 import { observeComponent, html, styled } from 'tarhon';
@@ -83,9 +85,7 @@ export class Button extends observeComponent(HTMLElement) {
       'box-shadow': '0px 0px 0px 4px rgba(79, 68, 224, 0.2)'
     }
   });
-
-  shadowElement = this.attachShadow({ mode: 'closed' });
-
+  
   constructor() {
     super();
     this.render();
@@ -93,7 +93,7 @@ export class Button extends observeComponent(HTMLElement) {
 
   render() {
     super.render();
-    this.shadowElement.appendChild(html`
+    this.renderRoot.appendChild(html`
       <div>
         <slot></slot>
       </div>
