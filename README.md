@@ -86,18 +86,22 @@ export class Button extends observeComponent(HTMLElement) {
     }
   });
   
+  ownStyle = styled({
+    ':host': {
+      'color': this.state.computedColor		
+    }
+  })	
   constructor() {
     super();
+    this.state.computedColor = someComplicatedMathFunctionThatOutputsAHexColor();
     this.render();
   }
 
   render() {
     super.render();
-    this.renderRoot.appendChild(html`
-      <div>
+    this._renderRoot.appendChild(html`<div>
         <slot></slot>
-      </div>
-    `);
+      </div>`);
   }
 }
 
@@ -118,3 +122,15 @@ customElements.define(Button.selector, Button);
   </body>
 </html>
 ```
+
+### Development
+#### Conventions
+In the development of the library, because of lack of a better way to deal with visibility and encapsulation in the javascript language
+I have chosen to have the following conventions for these things:
+- Private members are private because private is a supported feature. Strongly recommend anyone developing in javascript to make use of the
+feature wherever necessary
+- Protected is marked with `_` in front of the name of the member method or variable
+- Private members that are meant to be accessed by other parts of the library (due to a lack of a friend keyword) are using the 
+symbol feature and are thus Symbol members of the aforementioned items. Mess with these only if you really know what you're doing!
+
+The library has a lot of undocumented features and it would be amazing if they could be documented in some way. A helping hand would be very much welcome!
