@@ -145,6 +145,11 @@ export function observeComponent(TargetElement, config = {}) {
 		}
 
 		connectedCallback() {
+            if(this.notificationList && this.notificationList instanceof Set){
+                for(const notifiedComponent of this.notificationList){
+                    notifiedComponent.notify(this);
+                }
+            }
 			if (this._renderRoot instanceof ShadowRoot) {
 				this.renderStyle(...[
 					this.constructor.style?.constructed, this.ownStyle?.constructed
@@ -155,6 +160,14 @@ export function observeComponent(TargetElement, config = {}) {
 				}
 			}
 		}
+
+        /**
+         * @abstract must be implemented
+         * @param {T} notificationSource
+         */
+        notify(notificationSource){
+
+        }
 
 		renderStyle(...styles) {
 			if (hasAdoptedStyles()) {
@@ -182,7 +195,7 @@ export function observeComponent(TargetElement, config = {}) {
 		 * @abstract Must be implemented.
 		 */
 		render() {
-			if (this._renderRoot.firstElementChild) {
+			if (this._renderRoot.firstChild) {
 				const savedNodes = Array.from(this._renderRoot.childNodes);
 				for (let element of savedNodes) {
 					if (!(element.localName==="style" && element.dataset?.["tarhonStyle"]===1)) {
@@ -192,6 +205,10 @@ export function observeComponent(TargetElement, config = {}) {
 			}
 			this.state[INTERNAL_USAGES_SYMBOL].rendered = true;
 		}
+
+        get isConnected(){
+            return true;
+        }
 
 		findContext(ctx, contextComponent) {
 			return T.findFirstParent(contextComponent?.tagName || "tarhon-context", contextComponent?.contextAttribute!==undefined ? contextComponent?.contextAttribute:"ctx", // allows null
@@ -221,5 +238,17 @@ export function observeComponent(TargetElement, config = {}) {
 
 			return T.findFirstParent(tagName, attributeName, attributeValue, startingElement.parentNode);
 		}
+
+        addToParentNotificationList(targetComponentName){
+            const targetComponent = this.constructor.findFirstParent(targetComponentName, undefined, undefined, this );
+            if(targetComponent.isConnected){
+                setTimeout(() => this.notify(targetComponent), 0);
+            }else {
+                if (!targetComponent.notificationList || !(targetComponent.notificationList instanceof Set)) {
+                    targetComponent.notificationList = new Set();
+                }
+                targetComponent.notificationList.add(this);
+            }
+        }
 	};
 }
