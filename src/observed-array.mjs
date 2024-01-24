@@ -84,8 +84,7 @@ export class ObservedArray extends observeTarget(Array) {
 				const returnValue = target[key] = value;
 				const event = ObservedArray._createChangeValueEvent(value, target[key], receiver);
 				ObservedArray._dispatchStatic(internalUsages, event);
-
-				return returnValue;
+                return true;
 			}
 		});
 	}
@@ -170,7 +169,7 @@ export class ObservedArray extends observeTarget(Array) {
 			newlyBuiltArray[INTERNAL_ARRAY].splice(0, 1);
 		}
 
-		this.addEventListener("change", () => {
+		this.addEventListener("change", (event) => {
 			newlyBuiltArray[INTERNAL_ARRAY].splice(
 					0,
 					newlyBuiltArray[INTERNAL_ARRAY].length,

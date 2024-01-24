@@ -135,6 +135,9 @@ export class ObservedObject extends observeTarget(Object) {
 			case "boolean":
 				return new ObservedValue(value);
 			case "object":
+                if(value instanceof Date){
+                    return new ObservedValue(value);
+                }
 				if (value instanceof DocumentFragment) {
 					return new ObservedValue(value);
 				}
@@ -155,6 +158,7 @@ export class ObservedObject extends observeTarget(Object) {
 						));
 						return internalValue;
 					}
+
 					return value;
 				}
 

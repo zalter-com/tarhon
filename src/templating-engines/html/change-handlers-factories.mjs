@@ -1,3 +1,5 @@
+import {ObservedArray} from "../../observed-array.mjs";
+
 const SELF_BUILD = Symbol.for("__self_build__");
 
 /**
@@ -48,23 +50,18 @@ export const createBoolAttributeChangeHandler = (element, attributeName, withCon
  * @returns {NodeChangeHandler} the change Handler function for the element.
  */
 export const createNodeChangeHandler = (element) => {
-    /**
-     * @typedef {Function} NodeChangeHandler
-     * @property {Object} target
-     * @param {ObservedChangeEvent} event
-     */
     const f = function (event) {
-        if (f.target && event.eventTarget) {
+        if (event.eventTarget instanceof ObservedArray) {
             // this is an array
-            switch (f.target[SELF_BUILD].builtWith) {
+            switch (event.eventTarget[SELF_BUILD].builtWith) {
                 case "constructor":
                     element.data = event.eventTarget;
                     break;
                 case "map":
                     // this usually is a container;
-                    if (f.target[SELF_BUILD].container) {
-                        f.target[SELF_BUILD].container.innerHTML = "";
-                        f.target[SELF_BUILD].container.append(...event.eventTarget);
+                    if (event.eventTarget[SELF_BUILD].container) {
+                        event.eventTarget[SELF_BUILD].container.textContent = "";
+                        event.eventTarget[SELF_BUILD].container.append(...event.eventTarget);
                     } else {
                         element.data = Array.from(event.eventTarget).join("");
                     }
