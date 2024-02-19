@@ -17,7 +17,7 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
                         element.removeAttribute(attribute.name);
                     }
                 } else {
-                    if (["readonly", "disabled", "checked"].includes(attribute.name)) {
+                    if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
                                 typeof uniqueIdentifiers[attribute.value] === "object" &&
                                 typeof uniqueIdentifiers[attribute.value].addEventListener === "function"

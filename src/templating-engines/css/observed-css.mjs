@@ -18,7 +18,6 @@ export const hasAdoptedStyles = () => {
 export const hasReplaceSync = () => {
     let styleElement = null;
     let returnValue = false;
-
     if (document.styleSheets.length === 0) {
         styleElement = document.createElement("style");
         document.head.appendChild(styleElement);
@@ -49,26 +48,6 @@ const createCSSPropertyChangeHandler = (styleSheet, ruleIdx, ruleProperty) => {
 };
 
 const addToStyleSheet = (styleSheet, selector, value) => {
-    if (selector.startsWith("@font-face")) {
-        // TODO Add fontface support. Probably will support @font-faces as an array of loadable fonts.
-        //  for now, however, we do not support it.
-        console.error("Font face is not currently supported. Will be supported at a later point.");
-        return;
-    }
-
-    if (
-            selector.startsWith("@media") ||
-            selector.startsWith("@keyframes")
-    ) {
-        styleSheet.insertRule(`${selector}{}`, styleSheet.cssRules.length);
-        buildStyleSheet(styleSheet.cssRules[styleSheet.cssRules.length - 1], value);
-        return;
-    }
-    if (selector.startsWith("@")) {
-        console.error("Only @media and @keyframes are currently supported.");
-        return;
-    }
-
     if (typeof value === "string") {
         styleSheet.insertRule(`${selector}{${value}}`);
         return;

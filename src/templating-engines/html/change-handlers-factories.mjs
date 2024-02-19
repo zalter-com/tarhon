@@ -21,26 +21,16 @@ export const createAttrChangeHandler = (element, attributeName) => (event) => {
  * @param {boolean} withConditional
  * @returns {function(*): (undefined)}
  */
-export const createBoolAttributeChangeHandler = (element, attributeName, withConditional = true) => (event) => {
-    if (withConditional) {
-        if (event.eventTarget.conditionResults && element.getAttribute(attributeName) !== null) {
-            element.removeAttribute(attributeName);
-            return;
+export const createBoolAttributeChangeHandler = (element, attributeName, withConditional = true) => {
+    element.removeAttribute(attributeName);
+    return (event) => {
+        let actualValue = null;
+        if(withConditional){
+            actualValue = event.eventTarget.conditionResults
+        }else{
+            actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
         }
-
-        if (!event.eventTarget.conditionResults && element.getAttribute(attributeName) === null) {
-            element.setAttribute(attributeName, "");
-        }
-    } else {
-        const actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
-        if (actualValue === "true" || actualValue === attributeName || actualValue === true) {
-            element.setAttribute(attributeName, actualValue);
-        } else {
-            element.removeAttribute(attributeName);
-            if (typeof element[attributeName] === "boolean") {
-                element[attributeName] = false;
-            }
-        }
+        element[attributeName] = !!(actualValue === true || actualValue === "true" || actualValue === attributeName || actualValue === "on")
     }
 };
 
