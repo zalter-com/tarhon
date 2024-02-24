@@ -74,14 +74,7 @@ export const observedTemplateFactory = (trim = false) => (stringParts, ...vars) 
     while (element = elementFactory.next()) {
         switch (element.nodeType) {
             case Node.ELEMENT_NODE:
-                if (customElements.get(element.localName)) {
-                    const newElement = document.createElement(element.localName);
-                    newElement.replaceChildren(...element.childNodes);
-                    elementFactory.replaceElement(newElement, element);
-                    elementNodeParser(newElement, uniqueIdentifiers, element);
-                } else {
-                    elementNodeParser(element, uniqueIdentifiers);
-                }
+                elementNodeParser(element, uniqueIdentifiers);
                 break;
             case Node.TEXT_NODE:
                 if (trim && element.data.trim() === "") {

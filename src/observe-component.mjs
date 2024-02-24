@@ -172,6 +172,7 @@ export function observeComponent(TargetElement, config = {}) {
             }
         }
 
+
         /**
          * @abstract must be implemented
          * @param {T} notificationSource
@@ -215,10 +216,6 @@ export function observeComponent(TargetElement, config = {}) {
                 }
             }
             this.state[INTERNAL_USAGES_SYMBOL].rendered = true;
-        }
-
-        get isConnected() {
-            return true;
         }
 
         findContext(ctx, contextComponent) {
