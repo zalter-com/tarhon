@@ -88,6 +88,7 @@ export class ObservedValue extends ObservedTarget {
         let newValue = value;
 
         if (newValue instanceof ObservedValue) {
+            console.log("in this situation.");
             newValue = newValue.getValue();
         }
 

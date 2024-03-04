@@ -32,6 +32,12 @@ export function observeComponent(TargetElement, config = {}) {
         constructor() {
             super();
             // const shadowRoot = ElementInternals.attachInternals();
+            Object.defineProperty(this, "isObservedComponent", {
+                configurable: false,
+                writable: false,
+                enumerable: true,
+                value: true
+            });
             Object.defineProperty(this, "state", {
                 configurable: false,
                 writable: false,
@@ -46,7 +52,14 @@ export function observeComponent(TargetElement, config = {}) {
             });
             this.state[INTERNAL_USAGES_SYMBOL].parentElement = this;
             this.attrs[INTERNAL_USAGES_SYMBOL].parentElement = this;
-
+            const attributeChangeHandler = (attributeName) => (event) => {
+                this.dispatchEvent(new CustomEvent(`attr-mutation-${attributeName}`, {
+                    detail: {
+                        value: event.value,
+                        oldValue: event.oldValue
+                    }
+                }))
+            }
             if (typeof this.constructor.observedAttributes !== "undefined") {
                 this.constructor
                         .observedAttributes
@@ -58,7 +71,11 @@ export function observeComponent(TargetElement, config = {}) {
                             } else {
                                 attributeValue = super.getAttribute(attributeName);
                             }
-                            this.attrs[attributeName] = new ObservedValue(attributeValue);
+                            const observable = new ObservedValue(attributeValue);
+
+                            observable.addEventListener('changeValue', attributeChangeHandler(attributeName));
+                            this.attrs[attributeName] = observable;
+
                             Object.defineProperty(this, attributeName, {
                                 configurable: false,
                                 enumerable: true,

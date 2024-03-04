@@ -1,7 +1,7 @@
 import {ConditionalObject} from "../conditional.mjs";
 import {
     createAttrChangeHandler,
-    createBoolAttributeChangeHandler
+    createBoolAttributeChangeHandler, createIDLChangeHandler, getIDLforAttribute, isIdlAttribute
 } from "../change-handlers-factories.mjs";
 
 export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null) => {
@@ -17,7 +17,26 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
                         element.removeAttribute(attribute.name);
                     }
                 } else {
-                    if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
+                    if (isIdlAttribute(attribute.name)) {
+                        const idlName = getIDLforAttribute(attribute.name);
+                        if (
+                                typeof uniqueIdentifiers[attribute.value] === "object" &&
+                                typeof uniqueIdentifiers[attribute.value].addEventListener === "function"
+                        ) { // it's some observable.
+                            const idlChangeHandler = createIDLChangeHandler(element, idlName, uniqueIdentifiers[attribute.value] instanceof ConditionalObject);
+                            uniqueIdentifiers[attribute.value].addEventListener("change", idlChangeHandler);
+                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+                            idlChangeHandler(uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+                                    ? {eventTarget: uniqueIdentifiers[attribute.value]}
+                                    : {value: uniqueIdentifiers[attribute.value]})
+                        } else {
+                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+                            // the simple equality check is intentional here to allow autoconversions for idls.
+                            element[idlName] != uniqueIdentifiers[attribute.value] && (element[idlName] = uniqueIdentifiers[attribute.value]);
+                            // it's highly likely that this is a re-render otherwise this would have been done on the other branch.
+                        }
+
+                    } else if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
                                 typeof uniqueIdentifiers[attribute.value] === "object" &&
                                 typeof uniqueIdentifiers[attribute.value].addEventListener === "function"
@@ -34,11 +53,7 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
                                             : {value: uniqueIdentifiers[attribute.value]}
                             );
                         } else {
-                            if (uniqueIdentifiers[attribute.value] && uniqueIdentifiers[attribute.value] !== "false") {
-                                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
-                            } else {
-                                element.removeAttribute(attribute.name);
-                            }
+                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]); // it's already decided that it's not undefined.
                         }
                     } else {
                         if (
@@ -55,6 +70,8 @@ export const elementNodeParser = (element, uniqueIdentifiers, oldElement = null)
                         }
                     }
                 }
+            } else { // since it's undefined now, it must have been removed or made undefined to remove it as this can be a rerender.
+                element.removeAttribute(attribute.name);
             }
         } else {
             if (oldElement) {

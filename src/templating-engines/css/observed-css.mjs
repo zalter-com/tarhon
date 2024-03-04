@@ -48,6 +48,32 @@ const createCSSPropertyChangeHandler = (styleSheet, ruleIdx, ruleProperty) => {
 };
 
 const addToStyleSheet = (styleSheet, selector, value) => {
+    if (
+            selector.startsWith("@")
+    ) {
+        if (selector.startsWith("@import")
+                || selector.startsWith("@charset")
+        ) {
+            console.warn(`Unsupported CSS Rule: ${selector}`);
+            return;
+        }
+        if (selector.startsWith("@font-face")
+                || selector.startsWith("@page")
+                || selector.startsWith('@property')
+                || selector.startsWith('@counter-style')
+                || selector.startsWith('@font-palette')
+        ) {
+            let rule = `${selector} {\n`;
+            for (let [k, v] in value) {
+                rule += `${k}: ${v};\n`;
+            }
+            styleSheet.insertRule(`${rule}}`);
+            return;
+        }
+        styleSheet.insertRule(`${selector}{}`, styleSheet.cssRules.length);
+        buildStyleSheet(styleSheet.cssRules[styleSheet.cssRules.length - 1], value);
+        return;
+    }
     if (typeof value === "string") {
         styleSheet.insertRule(`${selector}{${value}}`);
         return;

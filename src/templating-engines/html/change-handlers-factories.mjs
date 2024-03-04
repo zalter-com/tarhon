@@ -25,13 +25,70 @@ export const createBoolAttributeChangeHandler = (element, attributeName, withCon
     element.removeAttribute(attributeName);
     return (event) => {
         let actualValue = null;
-        if(withConditional){
-            actualValue = event.eventTarget.conditionResults
-        }else{
+        if (withConditional) {
+            actualValue = event.eventTarget.conditionResults;
+        } else {
             actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
         }
-        element[attributeName] = !!(actualValue === true || actualValue === "true" || actualValue === attributeName || actualValue === "on")
+        element[attributeName] = !!(actualValue === true || actualValue === "true" || actualValue === attributeName || actualValue === "on");
+    };
+};
+
+const idlAttributes = {
+    value: {
+        type: null,
+        idlName: "value",
+    },
+    max: {
+        type: Number,
+        idlName: "max"
+    },
+    min: {
+        type: Number,
+        idlName: "min"
+    },
+    minlength: {
+        type: Number,
+        idlName: "minLength"
+    },
+    maxlength: {
+        type: Number,
+        idlName: "maxLength"
     }
+    // TODO Complete the list.
+};
+
+/**
+ *
+ * @param {string} attributeName
+ * @returns {boolean}
+ */
+export const isIdlAttribute = (attributeName) => !!(idlAttributes[attributeName] || attributeName.startsWith("aria"));
+
+/**
+ *
+ * @param {string} attributeName
+ * @returns {string|false}
+ */
+export const getIDLforAttribute = (attributeName) => idlAttributes[attributeName]?.idlName || (
+        (attributeName.startsWith("aria") && attributeName.replace(/\-[a-z]/ig, (i) => i[1].toUpperCase()))
+);
+
+export const createIDLChangeHandler = (element, idlAttributeName, withConditional) => (event) => {
+    const idlName = getIDLforAttribute(idlAttributeName);
+    let actualValue = null;
+    if (withConditional) {
+        actualValue = event.eventTarget.conditionResults;
+    } else {
+        if (element.isObservedComponent) {
+            if (element.attrs[idlAttributeName] !== event.value) {
+                element.attrs[idlAttributeName] = event.value;
+                return;
+            }
+        } else
+            actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
+    }
+    element[idlName] = actualValue;
 };
 
 /**
