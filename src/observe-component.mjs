@@ -189,6 +189,9 @@ export function observeComponent(TargetElement, config = {}) {
             }
         }
 
+        disconnectedCallback(...args){
+            typeof super.disconnectedCallback === "function" && super.disconnectedCallback(...args);
+        }
 
         /**
          * @abstract must be implemented
