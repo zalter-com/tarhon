@@ -311,17 +311,17 @@ export class ConditionalObject extends ObservedTarget {
         }
 
         if (typeof conditionRules.or === "object" && Array.isArray(conditionRules.or)) {
-            conditionResults.or = conditionRules
-                    .map(this.computeConditions(conditionRules.or))
+            conditionResults.or = conditionRules.or
+                    .map((item) => this.computeConditions(item, addListeners))
                     .some((item) => !!item);
         }
 
         Object
-                .keys(this.conditionRules)
+                .keys(conditionRules)
                 .filter((item) => !!this.verbs[item])
                 .forEach((conditionName) => (
                         conditionResults[conditionName] = (
-                                this.verbs[conditionName](this.conditionRules[conditionName], false)
+                                this.verbs[conditionName](conditionRules[conditionName], false)
                         )
                 ));
 
