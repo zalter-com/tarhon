@@ -40,9 +40,14 @@ export class ObservedValue extends ObservedTarget {
                 if (prop === INTERNAL_VALUE_SYMBOL) {
                     return this.#internalValue;
                 }
+
+                if(typeof this[prop] !== "undefined"){
+                    return this[prop];
+                }
+
                 // check whether the targeted property is in fact a method of the targeted element
                 if (typeof this.#internalValue?.[prop] === "function") {
-                    return this.#storedMethods[prop] = this.forwardMethodDispatcher(prop);
+                    return this.#storedMethods[prop] || (this.#storedMethods[prop] = this.forwardMethodDispatcher(prop));
                 }
 
                 return Reflect.get(target, prop, receiver);
@@ -64,10 +69,11 @@ export class ObservedValue extends ObservedTarget {
     get [INTERNAL_USAGES_SYMBOL]() {
         return this.#internalUsages;
     }
-
     forwardMethodDispatcher(methodName) {
         return (...args) => {
             if (methodName.startsWith("set")) {
+                // This is done to trigger the event with oldValue being correct.
+                // TODO Revisit this?!
                 const newValue = new (Object.getPrototypeOf(this.#internalValue).constructor)(this.#internalValue);
                 const result = newValue[methodName].call(newValue, args);
 
@@ -84,11 +90,10 @@ export class ObservedValue extends ObservedTarget {
      * Sets the value
      * @param {*} value
      */
-    setValue(value) {
+    setValue = (value) => {
         let newValue = value;
 
         if (newValue instanceof ObservedValue) {
-            console.log("in this situation.");
             newValue = newValue.getValue();
         }
 
@@ -101,7 +106,7 @@ export class ObservedValue extends ObservedTarget {
      * Gets the value.
      * @return {*}
      */
-    getValue() {
+    getValue = () => {
         return this[INTERNAL_VALUE_SYMBOL];
     }
 
@@ -110,7 +115,7 @@ export class ObservedValue extends ObservedTarget {
      * @param hint
      * @return {string|number|*}
      */
-    [Symbol.toPrimitive](hint) {
+    [Symbol.toPrimitive] = (hint) => {
         switch (hint) {
             case "number": {
                 let n = Number(this[INTERNAL_VALUE_SYMBOL]);

@@ -11,3 +11,4 @@ export * from "./templating-engines/html/conditional.mjs";
 export {htmlConditional as conditional} from "./templating-engines/html/conditional.mjs";
 export * from "./observe-component.mjs";
 export * from "./context.mjs";
+export {setAutoload} from "./templating-engines/html/parsers/element-node-parser.mjs"

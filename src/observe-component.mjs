@@ -89,6 +89,7 @@ export function observeComponent(TargetElement, config = {}) {
                         });
 
             }
+            this.dispatchEvent(new CustomEvent("constructed"));
         }
 
         /**
@@ -157,6 +158,10 @@ export function observeComponent(TargetElement, config = {}) {
             if (this.#requestedAnimationFrameHandle) {
                 cancelAnimationFrame(this.#requestedAnimationFrameHandle);
             }
+        }
+
+        get isObservedComponent(){
+            return true;
         }
 
         /**

@@ -97,6 +97,11 @@ export class ObservedArray extends observeTarget(Array) {
 		return ObservedArray;
 	}
 
+    triggerEmptyChange(){
+        const event = ObservedArray._createChangeValueEvent(this.length, this.length, this);
+        ObservedArray._dispatchStatic(this[INTERNAL_USAGES_SYMBOL], event);
+    }
+
 	/**
 	 * @param {Array} arrayToReplaceWith
 	 * @param {boolean} runEvent

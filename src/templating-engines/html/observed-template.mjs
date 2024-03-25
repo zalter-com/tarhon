@@ -1,6 +1,7 @@
 import {textNodeParser} from "./parsers/text-node-parser.mjs";
 import {elementNodeParser} from "./parsers/element-node-parser.mjs";
 
+
 const createElementFactory = (content) => {
     let currentElement = content;
 
@@ -74,7 +75,9 @@ export const observedTemplateFactory = (trim = false) => (stringParts, ...vars) 
     while (element = elementFactory.next()) {
         switch (element.nodeType) {
             case Node.ELEMENT_NODE:
-                elementNodeParser(element, uniqueIdentifiers);
+                elementNodeParser(element, uniqueIdentifiers).catch((e) => {
+                    console.error(e); // for now this is good enough let's see it in action.,
+                });
                 break;
             case Node.TEXT_NODE:
                 if (trim && element.data.trim() === "") {
