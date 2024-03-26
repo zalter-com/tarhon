@@ -65,6 +65,7 @@ export class ObservedObject extends observeTarget(Object) {
                 const internalValue = ObservedObject.convertInternalValue(value);
 
                 if(internalValue && target[key]?.constructor === internalValue?.constructor){
+                    //TODO Implement setValue for objects, check again the array case.
                     target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
                     return true;
                 }else{
