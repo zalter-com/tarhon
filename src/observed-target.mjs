@@ -69,6 +69,7 @@ export function observeTarget(TargetClass) {
 	 * @typedef ExtendedTargetClass
 	 */
 	return class T extends TargetClass {
+        #bidirectional = false;
 		/**
 		 * Create a change event
 		 * @param {*} value A value for the value property of the event
@@ -175,6 +176,16 @@ export function observeTarget(TargetClass) {
 				T._dispatchStatic(this[INTERNAL_USAGES_SYMBOL], event);
 			} // otherwise it's either still in constructor or simply doesn't even make sense
 		}
+
+        get bidirectional(){
+            return this.#bidirectional;
+        }
+        makeBidirectional = () => {
+            this.#bidirectional = true;
+        }
+        removeBidirectional = () => {
+            this.#bidirectional = false;
+        }
 	};
 }
 

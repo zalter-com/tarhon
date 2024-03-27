@@ -77,7 +77,7 @@ export class ObservedValue extends ObservedTarget {
                 const newValue = new (Object.getPrototypeOf(this.#internalValue).constructor)(this.#internalValue);
                 const result = newValue[methodName].call(newValue, args);
 
-                const event = ObservedValue._createChangeValueEvent(newValue, this.#internalValue);
+                const event = ObservedValue._createChangeValueEvent(newValue, this.#internalValue, this);
                 this.dispatchEvent(event);
                 this.#internalValue = newValue;
                 return result;
@@ -96,10 +96,12 @@ export class ObservedValue extends ObservedTarget {
         if (newValue instanceof ObservedValue) {
             newValue = newValue.getValue();
         }
+        // Don't trigger change when identical values are set.
+        if(this.#internalValue === newValue) return this.#internalValue;
 
-        const event = ObservedValue._createChangeValueEvent(newValue, this[INTERNAL_VALUE_SYMBOL]);
+        const event = ObservedValue._createChangeValueEvent(newValue, this.#internalValue);
         this.dispatchEvent(event);
-        return this[INTERNAL_VALUE_SYMBOL] = newValue;
+        return this.#internalValue = newValue;
     }
 
     /**
@@ -107,7 +109,7 @@ export class ObservedValue extends ObservedTarget {
      * @return {*}
      */
     getValue = () => {
-        return this[INTERNAL_VALUE_SYMBOL];
+        return this.#internalValue;
     }
 
     /**
@@ -118,11 +120,11 @@ export class ObservedValue extends ObservedTarget {
     [Symbol.toPrimitive] = (hint) => {
         switch (hint) {
             case "number": {
-                let n = Number(this[INTERNAL_VALUE_SYMBOL]);
+                let n = Number(this.#internalValue);
 
                 if (Number.isNaN(n)) {
                     try {
-                        n = BigInt(INTERNAL_VALUE_SYMBOL);
+                        n = BigInt(this.#internalValue);
                     } catch {
                         // basically do nothing.
                     }
@@ -131,9 +133,9 @@ export class ObservedValue extends ObservedTarget {
                 return n;
             }
             case "string":
-                return `${this[INTERNAL_VALUE_SYMBOL]}`;
+                return `${this.#internalValue}`;
             default:
-                return this[INTERNAL_VALUE_SYMBOL];
+                return this.#internalValue;
         }
     }
 }

@@ -7,17 +7,7 @@ const SELF_BUILD = Symbol.for("__self_build__");
 const matchRegEX = /(📇[_a-zA-Z0-9]+📇)/ig;
 
 export const textNodeParser = (element, uniqueIdentifiers, trim) => {
-    /*
-     for conditional objects first try to match something of this shape:
-     __markerStart__ ${this.foaieverde} === ${this.foaieLata} ? <div></div> : <div></div> __markerEnd__
-     or
-     __markerStart if(${this.foaieVerde} === ${this.foaieLata}){
-     some text or html
-     }else{
-     }
-     __makerEnd__
-     and if none match go into he code below.
-     */
+
     const testData = trim ? element.data.trim() : element.data;
 
     const executedMatch = testData.match(matchRegEX);

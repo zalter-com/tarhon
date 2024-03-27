@@ -3,6 +3,7 @@ import {
     createAttrChangeHandler,
     createBoolAttributeChangeHandler, createIDLChangeHandler, getIDLforAttribute, isIdlAttribute
 } from "../change-handlers-factories.mjs";
+import {ObservedTarget} from "../../../observed-target.mjs";
 
 let autoloadSet = false;
 let autoloadFn = () => {
@@ -34,7 +35,8 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
             });
         }
     }
-    for (const attribute of element.attributes) {
+    const capturedAttributes = [...element.attributes];
+    for (const attribute of capturedAttributes) {
         if (attribute.value.startsWith("📇") && attribute.value.endsWith("📇")) {
             // this is an attribute we care about.
             if (typeof uniqueIdentifiers[attribute.value] !== "undefined") {
@@ -43,21 +45,29 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                         const eventName = attribute.name.replace("@", "");
                         element.addEventListener(eventName, uniqueIdentifiers[attribute.value]);
                         element.removeAttribute(attribute.name);
+                    }else{
+                        element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value](element));
                     }
                 } else {
-
                     if (isIdlAttribute(attribute.name)) {
                         const idlName = getIDLforAttribute(attribute.name);
                         if (
-                                typeof uniqueIdentifiers[attribute.value] === "object" &&
-                                typeof uniqueIdentifiers[attribute.value].addEventListener === "function"
+                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
                         ) { // it's some observable.
-                            const idlChangeHandler = createIDLChangeHandler(element, idlName, uniqueIdentifiers[attribute.value] instanceof ConditionalObject);
-                            uniqueIdentifiers[attribute.value].addEventListener("change", idlChangeHandler);
-                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
-                            idlChangeHandler(uniqueIdentifiers[attribute.value] instanceof ConditionalObject
-                                    ? {eventTarget: uniqueIdentifiers[attribute.value]}
-                                    : {value: uniqueIdentifiers[attribute.value]});
+                            // First check whether it is a bidirectional.
+                            if(uniqueIdentifiers[attribute.value].bidirectional){
+                                element[attribute.name] = uniqueIdentifiers[attribute.value];
+                                element.removeAttribute(attribute.name, true);
+
+                                // if(element.isObservedComponent) element.render(); // trigger a re-render?
+                            }else {
+                                const idlChangeHandler = createIDLChangeHandler(element, idlName, uniqueIdentifiers[attribute.value] instanceof ConditionalObject);
+                                uniqueIdentifiers[attribute.value].addEventListener("change", idlChangeHandler);
+                                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+                                idlChangeHandler(uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+                                        ? {eventTarget: uniqueIdentifiers[attribute.value]}
+                                        : {value: uniqueIdentifiers[attribute.value]});
+                            }
                         } else {
                             element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
                             // the simple equality check is intentional here to allow autoconversions for idls.
@@ -67,8 +77,7 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
 
                     } else if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
-                                typeof uniqueIdentifiers[attribute.value] === "object" &&
-                                typeof uniqueIdentifiers[attribute.value].addEventListener === "function"
+                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
                         ) {
                             const attributeChangeHandler = createBoolAttributeChangeHandler(
                                     element,
@@ -86,28 +95,15 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                         }
                     } else {
                         if (
-                                typeof uniqueIdentifiers[attribute.value] === "object" &&
-                                typeof uniqueIdentifiers[attribute.value].addEventListener === "function"
+                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
                         ) {
                             uniqueIdentifiers[attribute.value].addEventListener(
                                     "change",
                                     createAttrChangeHandler(element, attribute.name)
                             );
                         }
-                        if (element.getAttribute(attribute.name) !== uniqueIdentifiers[attribute.value]) {
-                            if (attribute.name === "data") {
-                                console.log({
-                                    n: element.tagName.toLowerCase(),
-                                    element,
-                                    attribute,
-                                    v: uniqueIdentifiers[attribute.value]
-                                });
-                                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
-                                console.log(element.data);
-                            } else
-                                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
-                            // console.log(element.data)
-                        }
+
+                        element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
                     }
                 }
             } else { // since it's undefined now, it must have been removed or made undefined to remove it as this can be a rerender.

@@ -1,6 +1,6 @@
 import {ObservedArray} from "./observed-array.mjs";
 import {ObservedValue} from "./observed-value.mjs";
-import {observeTarget} from "./observed-target.mjs";
+import {ObservedTarget, observeTarget} from "./observed-target.mjs";
 
 const INTERNAL_USAGES_SYMBOL = Symbol.for("__internalUsages__");
 
@@ -65,28 +65,34 @@ export class ObservedObject extends observeTarget(Object) {
                 const internalValue = ObservedObject.convertInternalValue(value);
 
                 if(internalValue && target[key]?.constructor === internalValue?.constructor){
-                    //TODO Implement setValue for objects, check again the array case.
-                    target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
-                    return true;
+                    if(internalValue.bidirectional){
+                        // merge listeners
+                        internalValue[INTERNAL_USAGES_SYMBOL].eventListeners = Object.keys(target[key][INTERNAL_USAGES_SYMBOL].eventListeners).reduce(
+                                (acc, event) =>{
+                                    acc[event] = new Set([...acc[event], ...target[key][INTERNAL_USAGES_SYMBOL].eventListeners[event]]);
+                                    return acc;
+                                },
+                                internalValue[INTERNAL_USAGES_SYMBOL].eventListeners
+                        )
+                        const event = internalValue.constructor._createChangeValueEvent(internalValue, target[key], this);
+                        internalValue.dispatchEvent(event);
+                        target[key] = internalValue;
+                        return true;
+                    }else {
+                        //TODO Implement setValue for objects, check again the array case.
+                        target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
+                        return true;
+                    }
                 }else{
                     if(typeof target[key] !== "undefined"){
-                        internalValue[INTERNAL_USAGES_SYMBOL] = target[key][INTERNAL_USAGES_SYMBOL]; // should WORK !?
-                        // Should also trigger the event with old and new value but keep them pure?
-                        // const changeEvent = internalValue.constructor._createChangeValueEvent(value, target[key])
-                        internalValue.dispatchEvent(internalValue.constructor._createChangeValueEvent(value, target[key]));
+                        if(internalValue && internalValue instanceof ObservedTarget) {
+                            internalValue[INTERNAL_USAGES_SYMBOL] = target[key][INTERNAL_USAGES_SYMBOL]; // should WORK !?
+                            // Should also trigger the event with old and new value but keep them pure?
+                            // const changeEvent = internalValue.constructor._createChangeValueEvent(value, target[key])
+                            internalValue.dispatchEvent(internalValue.constructor._createChangeValueEvent(value, target[key]));
+                        }
                     }
                 }
-                // if (target[key] instanceof ObservedValue) {
-                //     internalValue = ObservedObject.convertInternalValue(value);
-                //     if (internalValue instanceof ObservedValue) {
-                //         target[key].setValue(value);
-                //         return true;
-                //     }
-                //     console.log("Change type situation", target[key][INTERNAL_USAGES_SYMBOL]);
-                // }
-                //
-                // if (typeof internalValue === "undefined") // no type change just do the conversion unless it's done from ObservedValue step.
-                //     internalValue = ObservedObject.convertInternalValue(value);
 
 
                 target[key] = internalValue;
@@ -106,7 +112,7 @@ export class ObservedObject extends observeTarget(Object) {
      */
     static convertInternalValue(value) {
         if (value === null) {
-            return null;
+            return new ObservedValue(null);
         }
 
         switch (typeof value) {

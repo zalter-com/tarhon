@@ -1,6 +1,7 @@
 import {ObservedObject} from "./observed-object.mjs";
 import {hasAdoptedStyles} from "./templating-engines/css/observed-css.mjs";
 import {ObservedValue} from "./observed-value.mjs";
+import {ObservedTarget} from "./observed-target.mjs";
 // import { Context } from './context.mjs';
 
 const __INTERNAL = Symbol();
@@ -58,8 +59,8 @@ export function observeComponent(TargetElement, config = {}) {
                         value: event.value,
                         oldValue: event.oldValue
                     }
-                }))
-            }
+                }));
+            };
             if (typeof this.constructor.observedAttributes !== "undefined") {
                 this.constructor
                         .observedAttributes
@@ -73,7 +74,7 @@ export function observeComponent(TargetElement, config = {}) {
                             }
                             const observable = new ObservedValue(attributeValue);
 
-                            observable.addEventListener('changeValue', attributeChangeHandler(attributeName));
+                            observable.addEventListener("changeValue", attributeChangeHandler(attributeName));
                             this.attrs[attributeName] = observable;
 
                             Object.defineProperty(this, attributeName, {
@@ -83,7 +84,7 @@ export function observeComponent(TargetElement, config = {}) {
                                     this.setAttribute(attributeName, value);
                                 },
                                 get: () => {
-                                    return this.attrs[attributeName].getValue();
+                                    return this.attrs[attributeName] instanceof ObservedValue ? this.attrs[attributeName].getValue() : this.attrs[attributeName];
                                 }
                             });
                         });
@@ -115,14 +116,21 @@ export function observeComponent(TargetElement, config = {}) {
         }
 
         setAttribute(attributeName, value) {
-            if (typeof this.constructor.observedAttributes !== "undefined" && this.constructor.observedAttributes.includes(attributeName)) {
-                if (attributeName === "checked" || attributeName === "disabled" || attributeName === "readonly") {
-                    return this.attrs[attributeName] = (value === "on" || value === "true" || value === attributeName || value === true || value === "");
+            if (value instanceof ObservedTarget && value.bidirectional) {
+                this.attrs[attributeName] = value;
+            } else {
+                if (typeof this.constructor.observedAttributes !== "undefined" && this.constructor.observedAttributes.includes(attributeName)) {
+                    if (attributeName === "checked" || attributeName === "disabled" || attributeName === "readonly")
+                        this.attrs[attributeName] = (value === "on" || value === "true" || value === attributeName || value === true || value === "");
+                    else
+                        this.attrs[attributeName] = value;
                 }
-                return this.attrs[attributeName] = value;
             }
             if (typeof value === "string") {
                 return super.setAttribute(attributeName, value);
+            } else {
+                // for now nothing...
+                // TODO Check this case
             }
         }
 
@@ -133,8 +141,8 @@ export function observeComponent(TargetElement, config = {}) {
             return super.getAttribute(name);
         }
 
-        removeAttribute(attributeName) {
-            if (typeof this.constructor.observedAttributes !== "undefined" && this.constructor.observedAttributes.includes(attributeName)) {
+        removeAttribute(attributeName, onlySuper = false) {
+            if (!onlySuper && typeof this.constructor.observedAttributes !== "undefined" && this.constructor.observedAttributes.includes(attributeName)) {
                 if (attributeName === "checked" || attributeName === "disabled" || attributeName === "readonly")
                     this.attrs[attributeName] = false;
                 else
@@ -160,22 +168,24 @@ export function observeComponent(TargetElement, config = {}) {
             }
         }
 
-        get isObservedComponent(){
+        get isObservedComponent() {
             return true;
         }
 
-        /**
-         * @abstract Call this with super.attributeChangedCallback in your own (if you implement it)
-         * @param attributeName
-         * @param oldValue
-         * @param newValue
-         */
-        attributeChangedCallback(attributeName, oldValue, newValue) {
-            if (attributeName === "checked" || attributeName === "disabled" || attributeName === "readonly")
-                this.attrs[attributeName] = (newValue === "on" || newValue === "true" || newValue === attributeName || newValue === true || newValue === "");
-            else
-                this.attrs[attributeName] = newValue;
-        }
+        // This should not be necessary anymore? Commenting it for now.
+        // /**
+        //  * @abstract Call this with super.attributeChangedCallback in your own (if you implement it)
+        //  * @param attributeName
+        //  * @param oldValue
+        //  * @param newValue
+        //  */
+        // attributeChangedCallback(attributeName, oldValue, newValue) {
+        //     console.log("inside attribute changed callback ... so this happens AFTER the attribute has been changed not prior", {attributeName, oldValue, newValue});
+        //     if (attributeName === "checked" || attributeName === "disabled" || attributeName === "readonly")
+        //         this.attrs[attributeName] = (newValue === "on" || newValue === "true" || newValue === attributeName || newValue === true || newValue === "");
+        //     else
+        //         this.attrs[attributeName] = newValue;
+        // }
 
         connectedCallback() {
             if (this.notificationList && this.notificationList instanceof Set) {
@@ -194,7 +204,7 @@ export function observeComponent(TargetElement, config = {}) {
             }
         }
 
-        disconnectedCallback(...args){
+        disconnectedCallback(...args) {
             typeof super.disconnectedCallback === "function" && super.disconnectedCallback(...args);
         }
 
