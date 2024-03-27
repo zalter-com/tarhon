@@ -56,14 +56,13 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                         ) { // it's some observable.
                             // First check whether it is a bidirectional.
                             if(uniqueIdentifiers[attribute.value].bidirectional){
-                                element[attribute.name] = uniqueIdentifiers[attribute.value];
+                                element[idlName] = uniqueIdentifiers[attribute.value];
                                 element.removeAttribute(attribute.name, true);
-
-                                // if(element.isObservedComponent) element.render(); // trigger a re-render?
                             }else {
                                 const idlChangeHandler = createIDLChangeHandler(element, idlName, uniqueIdentifiers[attribute.value] instanceof ConditionalObject);
                                 uniqueIdentifiers[attribute.value].addEventListener("change", idlChangeHandler);
-                                element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+                                element[idlName] = uniqueIdentifiers[attribute.value];
+                                element.removeAttribute(attribute.name);
                                 idlChangeHandler(uniqueIdentifiers[attribute.value] instanceof ConditionalObject
                                         ? {eventTarget: uniqueIdentifiers[attribute.value]}
                                         : {value: uniqueIdentifiers[attribute.value]});
