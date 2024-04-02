@@ -210,6 +210,10 @@ export class ConditionalObject extends ObservedTarget {
             return Array.from(templateParam.childNodes);
         }
 
+        if(templateParam instanceof ObservedValue && templateParam.getValue() instanceof DocumentFragment){
+            return Array.from(templateParam.getValue().childNodes);
+        }
+
         throw new Error(
                 "ConditionalObject template only accepts " +
                 "DocumentFragment, string or other `Conditional` objects."
