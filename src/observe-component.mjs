@@ -218,7 +218,7 @@ export function observeComponent(TargetElement, config = {}) {
 
         renderStyle(...styles) {
             if (hasAdoptedStyles()) {
-                this._renderRoot.adoptedStyleSheets = [...styles];
+                this._renderRoot.adoptedStyleSheets.push(...styles);
             } else {
                 for (let style of styles) {
                     if (typeof style === "function") {

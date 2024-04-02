@@ -134,28 +134,28 @@ const buildStyleSheet = (styleSheet, styleMap) => {
         }
     }
 };
-const INTERNAL_STYLE_MAP_SYMBOL = Symbol();
-const INTERNAL_BUILT_STYLE_SYMBOL = Symbol();
 
-class LazyStyle {
+export class LazyStyle {
+    #builtStyle = null;
+    #styleMap = null;
     constructor(styleMap) {
-        this[INTERNAL_BUILT_STYLE_SYMBOL] = null;
-        this[INTERNAL_STYLE_MAP_SYMBOL] = styleMap;
+        this.#builtStyle = null;
+        this.#styleMap = styleMap;
     }
 
     get constructed() {
-        if (this[INTERNAL_BUILT_STYLE_SYMBOL]) {
-            return this[INTERNAL_BUILT_STYLE_SYMBOL];
+        if (this.#builtStyle) {
+            return this.#builtStyle;
         }
 
         if (hasConstructableStyle() && hasReplaceSync()) {
             let styleSheet = new CSSStyleSheet();
-            buildStyleSheet(styleSheet, this[INTERNAL_STYLE_MAP_SYMBOL]);
-            this[INTERNAL_BUILT_STYLE_SYMBOL] = styleSheet;
-            return this[INTERNAL_BUILT_STYLE_SYMBOL];
+            buildStyleSheet(styleSheet, this.#styleMap);
+            this.#builtStyle = styleSheet;
+            return this.#builtStyle;
         }
         return (sheet) => {
-            buildStyleSheet(sheet, this[INTERNAL_STYLE_MAP_SYMBOL]);
+            buildStyleSheet(sheet, this.#builtStyle);
         };
     }
 }

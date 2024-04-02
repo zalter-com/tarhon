@@ -1,5 +1,7 @@
 import {textNodeParser} from "./parsers/text-node-parser.mjs";
 import {elementNodeParser} from "./parsers/element-node-parser.mjs";
+import {LazyStyle} from "../css/observed-css.mjs";
+import {observeComponent} from "../../observe-component.mjs";
 
 
 const createElementFactory = (content) => {
@@ -67,7 +69,6 @@ export const observedTemplateFactory = (trim = false) => (stringParts, ...vars) 
     templateElement.innerHTML = htmlString;
 
     const content = templateElement.content;
-
     const elementFactory = createElementFactory(content);
     let element = null;
 
@@ -90,7 +91,36 @@ export const observedTemplateFactory = (trim = false) => (stringParts, ...vars) 
 
     return content;
 };
-
+let count = 0;
+class AdHoc extends observeComponent(HTMLElement){
+    constructor() {
+        super();
+        this.render();
+    }
+    render() {
+        super.render();
+        this._renderRoot.appendChild(this.deferredRenderItems || observedTemplateFactory(true)`<slot></slot>`)
+    }
+}
+customElements.define('ad-hoc', AdHoc);
+export const observedTemplateAdhoc = (...args) => {
+    const outsideElement = document.createElement("template");
+    outsideElement.innerHTML = '<ad-hoc></ad-hoc>';
+    let adHoc = outsideElement.content.childNodes[0];
+    adHoc.deferredRenderItems = observedTemplateFactory(true)(...args);
+    Object.defineProperty(outsideElement.content,"adoptedStyleSheets", {
+        get: () => {
+            return adHoc.ownStyle;
+        },
+        set: (v) => {
+            adHoc.ownStyle = v;
+            if(adHoc.isConnected){
+                adHoc.renderStyle(adHoc.ownStyle);
+            }
+        }
+    });
+    return outsideElement.content;
+}
 /**
  * Template function that returns a DocumentFragment and supports Observed items. Will not rerender when observed items change value.
  * When using arrays, try to put them in a container element alone(no other elements around them not even empty text).
