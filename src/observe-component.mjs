@@ -2,6 +2,7 @@ import {ObservedObject} from "./observed-object.mjs";
 import {hasAdoptedStyles} from "./templating-engines/css/observed-css.mjs";
 import {ObservedValue} from "./observed-value.mjs";
 import {ObservedTarget} from "./observed-target.mjs";
+import {ObservedArray} from "./observed-array.mjs";
 // import { Context } from './context.mjs';
 
 const __INTERNAL = Symbol();
@@ -72,6 +73,7 @@ export function observeComponent(TargetElement, config = {}) {
                             } else {
                                 attributeValue = super.getAttribute(attributeName);
                             }
+
                             const observable = new ObservedValue(attributeValue);
 
                             observable.addEventListener("changeValue", attributeChangeHandler(attributeName));
@@ -116,7 +118,12 @@ export function observeComponent(TargetElement, config = {}) {
         }
 
         setAttribute(attributeName, value) {
-            if (value instanceof ObservedTarget && value.bidirectional) {
+            if ((
+                    value instanceof ObservedTarget
+                    || value instanceof ObservedObject
+                    || value instanceof ObservedArray
+                    || value instanceof ObservedValue
+            ) && value.bidirectional) {
                 this.attrs[attributeName] = value;
             } else {
                 if (typeof this.constructor.observedAttributes !== "undefined" && this.constructor.observedAttributes.includes(attributeName)) {

@@ -4,6 +4,9 @@ import {
     createBoolAttributeChangeHandler, createIDLChangeHandler, getIDLforAttribute, isIdlAttribute
 } from "../change-handlers-factories.mjs";
 import {ObservedTarget} from "../../../observed-target.mjs";
+import {ObservedArray} from "../../../observed-array.mjs";
+import {ObservedValue} from "../../../observed-value.mjs";
+import {ObservedObject} from "../../../observed-object.mjs";
 
 let autoloadSet = false;
 let autoloadFn = () => {
@@ -53,6 +56,9 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                         const idlName = getIDLforAttribute(attribute.name);
                         if (
                                 uniqueIdentifiers[attribute.value] instanceof ObservedTarget
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
                         ) { // it's some observable.
                             // First check whether it is a bidirectional.
                             if(uniqueIdentifiers[attribute.value].bidirectional){
@@ -77,6 +83,9 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                     } else if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
                                 uniqueIdentifiers[attribute.value] instanceof ObservedTarget
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
                         ) {
                             const attributeChangeHandler = createBoolAttributeChangeHandler(
                                     element,
@@ -95,6 +104,9 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                     } else {
                         if (
                                 uniqueIdentifiers[attribute.value] instanceof ObservedTarget
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
+                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
                         ) {
                             uniqueIdentifiers[attribute.value].addEventListener(
                                     "change",

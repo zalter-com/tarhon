@@ -68,7 +68,7 @@ export function observeTarget(TargetClass) {
 	 * @property {object} [INTERNAL_USAGES_SYMBOL]
 	 * @typedef ExtendedTargetClass
 	 */
-	return class T extends TargetClass {
+	return class extends TargetClass {
         #bidirectional = false;
 		/**
 		 * Create a change event
@@ -173,7 +173,7 @@ export function observeTarget(TargetClass) {
 		 */
 		dispatchEvent(event) {
 			if (this[INTERNAL_USAGES_SYMBOL]) {
-				T._dispatchStatic(this[INTERNAL_USAGES_SYMBOL], event);
+				this.constructor._dispatchStatic(this[INTERNAL_USAGES_SYMBOL], event);
 			} // otherwise it's either still in constructor or simply doesn't even make sense
 		}
 

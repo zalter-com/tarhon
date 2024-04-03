@@ -11,12 +11,13 @@ const INTERNAL_USAGES_SYMBOL = Symbol.for("__internalUsages__");
  *   internal array values.
  */
 export class ObservedObject extends observeTarget(Object) {
+    #proxy = null;
     constructor() {
         // this pretty much goes deep and converts all into observables.
         super();
         let internalUsages = ObservedObject._initInternalUsage();
 
-        return new Proxy(this, {
+        return (this.#proxy = new Proxy(this, {
             /**
              *
              * @param target
@@ -85,7 +86,14 @@ export class ObservedObject extends observeTarget(Object) {
                     }
                 }else{
                     if(typeof target[key] !== "undefined"){
-                        if(internalValue && internalValue instanceof ObservedTarget) {
+                        if(internalValue &&
+                                (
+                                        internalValue instanceof ObservedTarget
+                                        || internalValue instanceof ObservedObject
+                                        || internalValue instanceof ObservedArray
+                                        || internalValue instanceof ObservedValue
+                                )
+                        ) {
                             internalValue[INTERNAL_USAGES_SYMBOL] = target[key][INTERNAL_USAGES_SYMBOL]; // should WORK !?
                             // Should also trigger the event with old and new value but keep them pure?
                             // const changeEvent = internalValue.constructor._createChangeValueEvent(value, target[key])
@@ -99,11 +107,11 @@ export class ObservedObject extends observeTarget(Object) {
 
                 return true;
             }
-        });
+        }));
     }
 
     getValue() {
-        return this;
+        return this.#proxy;
     }
 
     /**
