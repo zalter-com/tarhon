@@ -12,6 +12,7 @@ const INTERNAL_USAGES_SYMBOL = Symbol.for("__internalUsages__");
  */
 export class ObservedObject extends observeTarget(Object) {
     #proxy = null;
+
     constructor() {
         // this pretty much goes deep and converts all into observables.
         super();
@@ -65,28 +66,35 @@ export class ObservedObject extends observeTarget(Object) {
 
                 const internalValue = ObservedObject.convertInternalValue(value);
 
-                if(internalValue && target[key]?.constructor === internalValue?.constructor){
-                    if(internalValue.bidirectional){
+                if (internalValue && target[key]?.constructor === internalValue?.constructor) {
+                    if (internalValue.bidirectional) {
                         // merge listeners
                         internalValue[INTERNAL_USAGES_SYMBOL].eventListeners = Object.keys(target[key][INTERNAL_USAGES_SYMBOL].eventListeners).reduce(
-                                (acc, event) =>{
+                                (acc, event) => {
                                     acc[event] = new Set([...acc[event], ...target[key][INTERNAL_USAGES_SYMBOL].eventListeners[event]]);
                                     return acc;
                                 },
                                 internalValue[INTERNAL_USAGES_SYMBOL].eventListeners
-                        )
+                        );
                         const event = internalValue.constructor._createChangeValueEvent(internalValue, target[key], this);
                         internalValue.dispatchEvent(event);
                         target[key] = internalValue;
                         return true;
-                    }else {
+                    } else {
                         //TODO Implement setValue for objects, check again the array case.
-                        target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
+                        if (typeof target[key].setValue !== "function") {
+                            console.log("WTF?!", key, target[key]);
+                        }
+                        if (target[key] instanceof ObservedValue)
+                            target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
+                        else {
+                            target[key] = value; // TODO This might not be working all the time. Check in the case of Arrays and objects in some situations ?
+                        }
                         return true;
                     }
-                }else{
-                    if(typeof target[key] !== "undefined"){
-                        if(internalValue &&
+                } else {
+                    if (typeof target[key] !== "undefined") {
+                        if (internalValue &&
                                 (
                                         internalValue instanceof ObservedTarget
                                         || internalValue instanceof ObservedObject
@@ -113,6 +121,10 @@ export class ObservedObject extends observeTarget(Object) {
     getValue() {
         return this.#proxy;
     }
+
+    // setValue(value) {
+    //     console.log(Object.getOwnPropertyNames(value));
+    // }
 
     /**
      * @param {*} value

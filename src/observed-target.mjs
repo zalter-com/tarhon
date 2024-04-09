@@ -129,7 +129,33 @@ export function observeTarget(TargetClass) {
 				}
 			}
 		}
-
+        constructor() {
+            super();
+            const makeBidirectional = () => {
+                this.#bidirectional = true;
+            }
+            const removeBidirectional = () => {
+                this.#bidirectional = false;
+            }
+            const identity = () => true;
+            Object.defineProperties(this, {
+                bidirectional: {
+                    enumerable: false,
+                    get: () => this.#bidirectional,
+                    set: identity
+                },
+                makeBidirectional: {
+                    enumerable: false,
+                    get: () =>  makeBidirectional,
+                    set: identity
+                },
+                removeBidirectional: {
+                    enumerable: false,
+                    get: () => removeBidirectional,
+                    set: identity
+                }
+            })
+        }
 		/**
 		 * Adds an event listener / handler for the event with that name.
 		 * @note Due to the fact that change is a natural event for certain elements, change event
@@ -177,15 +203,8 @@ export function observeTarget(TargetClass) {
 			} // otherwise it's either still in constructor or simply doesn't even make sense
 		}
 
-        get bidirectional(){
-            return this.#bidirectional;
-        }
-        makeBidirectional = () => {
-            this.#bidirectional = true;
-        }
-        removeBidirectional = () => {
-            this.#bidirectional = false;
-        }
+
+
 	};
 }
 
