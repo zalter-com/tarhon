@@ -39,82 +39,84 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
         }
     }
     const capturedAttributes = [...element.attributes];
+
     for (const attribute of capturedAttributes) {
+        const valueCopy = uniqueIdentifiers[attribute.value];
         if (attribute.value.startsWith("📇") && attribute.value.endsWith("📇")) {
             // this is an attribute we care about.
-            if (typeof uniqueIdentifiers[attribute.value] !== "undefined") {
-                if (typeof uniqueIdentifiers[attribute.value] === "function") {
+            if (typeof valueCopy !== "undefined") {
+                if (typeof valueCopy === "function") {
                     if (attribute.name.startsWith("@")) {
                         const eventName = attribute.name.replace("@", "");
-                        element.addEventListener(eventName, uniqueIdentifiers[attribute.value]);
+                        element.addEventListener(eventName, valueCopy);
                         element.removeAttribute(attribute.name);
                     }else{
-                        element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value](element));
+                        element.setAttribute(attribute.name, valueCopy(element));
                     }
                 } else {
                     if (isIdlAttribute(attribute.name)) {
                         const idlName = getIDLforAttribute(attribute.name);
                         if (
-                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
+                                valueCopy instanceof ObservedTarget
+                                || valueCopy instanceof ObservedObject
+                                || valueCopy instanceof ObservedArray
+                                || valueCopy instanceof ObservedValue
                         ) { // it's some observable.
                             // First check whether it is a bidirectional.
-                            if(uniqueIdentifiers[attribute.value].bidirectional){
-                                element[idlName] = uniqueIdentifiers[attribute.value];
-                                element.removeAttribute(attribute.name, true);
+                            if(valueCopy.bidirectional){
+                                element[idlName] = valueCopy;
                             }else {
-                                const idlChangeHandler = createIDLChangeHandler(element, idlName, uniqueIdentifiers[attribute.value] instanceof ConditionalObject);
-                                uniqueIdentifiers[attribute.value].addEventListener("change", idlChangeHandler);
-                                element[idlName] = uniqueIdentifiers[attribute.value];
-                                element.removeAttribute(attribute.name);
-                                idlChangeHandler(uniqueIdentifiers[attribute.value] instanceof ConditionalObject
-                                        ? {eventTarget: uniqueIdentifiers[attribute.value]}
-                                        : {value: uniqueIdentifiers[attribute.value]});
+                                const idlChangeHandler = createIDLChangeHandler(element, idlName, valueCopy instanceof ConditionalObject);
+                                valueCopy.addEventListener("change", idlChangeHandler);
+                                element[idlName] = valueCopy;
+                                idlChangeHandler(valueCopy instanceof ConditionalObject
+                                        ? {eventTarget: valueCopy}
+                                        : {value: valueCopy});
                             }
                         } else {
-                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+
                             // the simple equality check is intentional here to allow autoconversions for idls.
-                            (element[idlName] != uniqueIdentifiers[attribute.value]) && (element[idlName] = uniqueIdentifiers[attribute.value]);
+                            (element[idlName] != valueCopy) && (element[idlName] = valueCopy);
                             // it's highly likely that this is a re-render otherwise this would have been done on the other branch.
+
+                            if(element.isObservedComponent) element.setAttribute(attribute.name, valueCopy, true);
                         }
 
                     } else if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
-                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
+                                valueCopy instanceof ObservedTarget
+                                || valueCopy instanceof ObservedObject
+                                || valueCopy instanceof ObservedArray
+                                || valueCopy instanceof ObservedValue
                         ) {
                             const attributeChangeHandler = createBoolAttributeChangeHandler(
                                     element,
                                     attribute.name,
-                                    uniqueIdentifiers[attribute.value] instanceof ConditionalObject
+                                    valueCopy instanceof ConditionalObject
                             );
-                            uniqueIdentifiers[attribute.value].addEventListener("change", attributeChangeHandler);
+                            valueCopy.addEventListener("change", attributeChangeHandler);
                             attributeChangeHandler(
-                                    uniqueIdentifiers[attribute.value] instanceof ConditionalObject
-                                            ? {eventTarget: uniqueIdentifiers[attribute.value]}
-                                            : {value: uniqueIdentifiers[attribute.value]}
+                                    valueCopy instanceof ConditionalObject
+                                            ? {eventTarget: valueCopy}
+                                            : {value: valueCopy}
                             );
                         } else {
-                            element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]); // it's already decided that it's not undefined.
+                            element.setAttribute(attribute.name, valueCopy); // it's already decided that it's not undefined.
                         }
                     } else {
                         if (
-                                uniqueIdentifiers[attribute.value] instanceof ObservedTarget
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedObject
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedArray
-                                || uniqueIdentifiers[attribute.value] instanceof ObservedValue
+                                valueCopy instanceof ObservedTarget
+                                || valueCopy instanceof ObservedObject
+                                || valueCopy instanceof ObservedArray
+                                || valueCopy instanceof ObservedValue
                         ) {
-                            uniqueIdentifiers[attribute.value].addEventListener(
+                            valueCopy.addEventListener(
                                     "change",
                                     createAttrChangeHandler(element, attribute.name)
                             );
                         }
 
-                        element.setAttribute(attribute.name, uniqueIdentifiers[attribute.value]);
+                        element.setAttribute(attribute.name, valueCopy);
                     }
                 }
             } else { // since it's undefined now, it must have been removed or made undefined to remove it as this can be a rerender.

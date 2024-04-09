@@ -117,7 +117,9 @@ export function observeComponent(TargetElement, config = {}) {
             return this.#shadowElement = this.attachShadow({mode: "closed"});
         }
 
-        setAttribute(attributeName, value) {
+        setAttribute(attributeName, value, onlySuper = false) {
+            if(onlySuper) return super.setAttribute(attributeName, value);
+
             if ((
                     value instanceof ObservedTarget
                     || value instanceof ObservedObject
@@ -133,11 +135,13 @@ export function observeComponent(TargetElement, config = {}) {
                         this.attrs[attributeName] = value;
                 }
             }
-            if (typeof value === "string") {
-                return super.setAttribute(attributeName, value);
+
+            if (typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+                    || value instanceof ObservedValue
+            ) {
+                return super.setAttribute(attributeName, `${value}`);
             } else {
-                // for now nothing...
-                // TODO Check this case
+                return super.setAttribute(attributeName, undefined);
             }
         }
 
