@@ -82,9 +82,6 @@ export class ObservedObject extends observeTarget(Object) {
                         return true;
                     } else {
                         //TODO Implement setValue for objects, check again the array case.
-                        if (typeof target[key].setValue !== "function") {
-                            console.log("WTF?!", key, target[key]);
-                        }
                         if (target[key] instanceof ObservedValue)
                             target[key].setValue(value); // theoretically conversion could have been avoided, but I don't want to spend too much time here.
                         else {

@@ -8,7 +8,7 @@ const commandOptions = {};
 
 loadConfigFile(configFile, commandOptions)
 	.then(async ({ options, warnings }) => {
-		console.log(`We currently have ${warnings.count} warnings`);
+		console.info(`We currently have ${warnings.count} warnings`);
 
 		warnings.flush();
 
