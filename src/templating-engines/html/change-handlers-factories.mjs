@@ -8,11 +8,18 @@ const SELF_BUILD = Symbol.for("__self_build__");
  * @param attributeName
  * @returns {function(*): void}
  */
-export const createAttrChangeHandler = (element, attributeName) => (event) => {
-    // this one has to be treated in a special way.
-    if (event.eventTarget) element.setAttribute(attributeName, event.eventTarget);
-    else element.setAttribute(attributeName, event.value);
-};
+export const createAttrChangeHandler = (element, attributeName) => {
+    const eventHandler = (event) => {
+        if(event?.value?.bidirectional) {
+            event.value.removeEventListener("change", eventHandler);
+            // return; let it run once to get the initial value.
+        }
+        // this one has to be treated in a special way.
+        if (event.eventTarget) element.setAttribute(attributeName, event.eventTarget);
+        else element.setAttribute(attributeName, event.value);
+    };
+    return eventHandler
+}
 
 /**
  *
