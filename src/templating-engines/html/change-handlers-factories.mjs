@@ -89,6 +89,7 @@ export const createIDLChangeHandler = (element, idlAttributeName, withConditiona
             actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
     }
     element[idlName] = actualValue;
+    element.setAttribute(idlAttributeName, actualValue, true);
 };
 
 /**

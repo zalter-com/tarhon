@@ -50,7 +50,7 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                         const eventName = attribute.name.replace("@", "");
                         element.addEventListener(eventName, valueCopy);
                         element.removeAttribute(attribute.name);
-                    }else{
+                    } else {
                         element.setAttribute(attribute.name, valueCopy(element));
                     }
                 } else {
@@ -63,9 +63,9 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                                 || valueCopy instanceof ObservedValue
                         ) { // it's some observable.
                             // First check whether it is a bidirectional.
-                            if(valueCopy.bidirectional){
+                            if (valueCopy.bidirectional) {
                                 element[idlName] = valueCopy;
-                            }else {
+                            } else {
                                 const idlChangeHandler = createIDLChangeHandler(element, idlName, valueCopy instanceof ConditionalObject);
                                 valueCopy.addEventListener("change", idlChangeHandler);
                                 element[idlName] = valueCopy;
@@ -78,10 +78,8 @@ export const elementNodeParser = async (element, uniqueIdentifiers, oldElement =
                             // the simple equality check is intentional here to allow autoconversions for idls.
                             (element[idlName] != valueCopy) && (element[idlName] = valueCopy);
                             // it's highly likely that this is a re-render otherwise this would have been done on the other branch.
-
-                            if(element.isObservedComponent) element.setAttribute(attribute.name, valueCopy, true);
                         }
-
+                        element.setAttribute(attribute.name, valueCopy, true);
                     } else if (attribute.name === "checked" || attribute.name === "disabled" || attribute.name === "readonly") {
                         if (
                                 valueCopy instanceof ObservedTarget

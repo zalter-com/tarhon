@@ -76,7 +76,7 @@ export class ObservedObject extends observeTarget(Object) {
                                 },
                                 internalValue[INTERNAL_USAGES_SYMBOL].eventListeners
                         );
-                        const event = internalValue.constructor._createChangeValueEvent(internalValue, target[key], this);
+                        const event = internalValue.constructor._createChangeValueEvent(internalValue, target[key]);
                         internalValue.dispatchEvent(event);
                         target[key] = internalValue;
                         return true;
