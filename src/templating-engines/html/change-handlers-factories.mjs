@@ -37,7 +37,10 @@ export const createBoolAttributeChangeHandler = (element, attributeName, withCon
         } else {
             actualValue = typeof event?.value?.getValue === "function" ? event.value.getValue() : event.value;
         }
-        element[attributeName] = !!(actualValue === true || actualValue === "true" || actualValue === attributeName || actualValue === "on");
+        const value = !!(actualValue === true || actualValue === "true" || actualValue === attributeName || actualValue === "on");
+        element[attributeName] = value
+        if(value) element.setAttribute(attributeName, value);
+        else element.removeAttribute(attributeName);
     };
 };
 
