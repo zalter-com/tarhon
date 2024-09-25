@@ -168,6 +168,27 @@ export class ObservedObject extends observeTarget(Object) {
 		}
 	}
 
+    static getInternalValue(value) {
+        if(value instanceof ObservedValue) {
+            return value.getValue();
+        }
+        if(value instanceof ObservedArray) {
+            const arrValue = []
+            value.forEach((item) => {
+                arrValue.push(ObservedObject.getInternalValue(item));
+            });
+            return arrValue;
+        }
+        if(value instanceof ObservedObject) {
+            const obj = {};
+            Object.keys(value).forEach((key) => {
+                obj[key] = ObservedObject.getInternalValue(value[key]);
+            })
+            return obj;
+        }
+        return value;
+    }
+
 	[Symbol.species]() {
 		return Object;
 	}
